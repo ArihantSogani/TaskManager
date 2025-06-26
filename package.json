@@ -1,0 +1,16 @@
+{
+  "name": "mern-user-management-system-master",
+  "version": "1.0.0",
+  "description": "<p align=\"center\"> <img src=\"public/banner.png\" alt=\"Logo\" width=\"250\" height=\"250\" justify-items=\"center\"/> <h3 align=\"center\">👩🏻‍💻 User Management System 🛡️</h3> </p>",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"npm run start --prefix backend\" \"npm run start --prefix frontend\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^6.0.0"
+  }
+}
