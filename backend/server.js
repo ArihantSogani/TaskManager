@@ -14,6 +14,7 @@ const setupSocket = require('./middleware/onlineStatus')
 const requireAuth = require('./middleware/requireAuth')
 const url = require('./config/url')
 const notificationService = require('./services/notificationService')
+const notificationRoutes = require('./routes/notification')
 
 const port = process.env.PORT || 4000
 // console.log(`Server running in ${process.env.PORT} mode on port ${port}`);
@@ -84,6 +85,7 @@ io.on('connection', (socket) => {
 app.use('/api/users', require('./routes/user'))
 app.use('/api/tasks', require('./routes/task'))
 app.use('/api/notes', require('./routes/note'))
+app.use('/api/notification', notificationRoutes)
 // app.use(logger)
 app.use(notFound)
 app.use(errorHandler)

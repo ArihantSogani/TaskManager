@@ -1,9 +1,10 @@
-const Task = require('../models/Task')
+const Task = require('../models/task')
 const User = require('../models/user/User')
 const ROLES_LIST = require('../config/rolesList')
 const { CustomError } = require('../middleware/errorHandler')
 const { validateAuthInputField, validateObjectId } = require('../utils/validation')
 const notificationService = require('../services/notificationService')
+const notificationController = require('./notification')
 // const pushNotificationService = require('../services/pushNotificationService')
 
 exports.getAll = async (req, res, next) => {

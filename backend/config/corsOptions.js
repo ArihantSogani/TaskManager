@@ -16,13 +16,13 @@ const corsOptions = {
 
 const oauthCorsOptions = {
     origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true)
-    },
-    methods: ['GET'],
-    credentials: true,
-    optionsSuccessStatus: 200
+    } else {
+        callback(new Error('Not allowed by CORS'))
+    }
 }
-
+}
 const corsMiddleware = (req, res, next) => {
     if (paths.includes(req.path)) {
         cors(oauthCorsOptions)(req, res, next)

@@ -1,10 +1,9 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { useAuthContext } from '../hooks/useAuthContext'
 import { socket } from '../socket'
 import { toast } from 'react-toastify'
 import { useNotificationContext } from '../context/notification'
 // import axios from '../api/axios'
-
 const Notifications = () => {
   const { auth } = useAuthContext()
   const { addNotification } = useNotificationContext()
