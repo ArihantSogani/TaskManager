@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken')
 
-exports.generateAccessToken = (userInfo) => jwt.sign(userInfo, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '8h' })
+exports.generateAccessToken = (userInfo) => jwt.sign(userInfo, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '7d' })
 
 exports.generateRefreshToken = (_id) => jwt.sign({_id}, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '30d' })
 

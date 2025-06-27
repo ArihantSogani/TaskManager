@@ -5,6 +5,7 @@ import { usePathContext } from '../context/path'
 import { useAuthContext } from '../context/auth'
 import { useUserContext } from '../context/user'
 import { FaUserFriends, FaTasks, FaStickyNote } from 'react-icons/fa'
+// import PushNotificationSetup from '../components/PushNotificationSetup'
 
 const Home = () => {
     const { auth } = useAuthContext()
@@ -20,6 +21,7 @@ const Home = () => {
     return (
         <div className="home">
             <div className="container">
+                {/* Push Notification Setup removed */}
                 <div className="row">
                     {accessRight && (
                         <div className="col-md-6 col-lg-4 mb-4">

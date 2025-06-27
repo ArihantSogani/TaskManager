@@ -72,3 +72,59 @@ exports.signup = async (req, res, next) => {
   }
 }
 
+exports.refresh = async (req, res, next) => {
+  try {
+    const cookies = req.cookies
+
+    if (!cookies?.jwt) throw new CustomError('Unauthorized', 401)
+
+    const refreshToken = cookies.jwt
+
+    let decoded
+    try {
+      decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET)
+    } catch (jwtError) {
+      if (jwtError instanceof jwt.TokenExpiredError) {
+        throw new CustomError('Refresh token expired', 401)
+      } else if (jwtError instanceof jwt.JsonWebTokenError) {
+        throw new CustomError('Invalid refresh token', 401)
+      } else {
+        throw new CustomError('Token verification failed', 401)
+      }
+    }
+
+    const user = await User.findById(decoded._id).select('_id name email roles active').lean().exec()
+    if (!user) throw new CustomError('Unauthorized user not found', 401)
+
+    if (!user.active) {
+      res.clearCookie('jwt', { httpOnly: true, sameSite: 'Lax', secure: true })
+      throw new CustomError('Your account has been blocked', 400)
+    }
+
+    const accessToken = generateAccessToken({
+      userInfo: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        roles: user.roles
+      }
+    })
+
+    res.status(200).json(accessToken)
+  } catch (error) {
+    next(error)
+  }
+}
+
+exports.logout = async (req, res, next) => {
+  try {
+    const cookies = req.cookies
+    if (cookies?.jwt) {
+      res.clearCookie('jwt', { httpOnly: true, sameSite: 'Lax', secure: true })
+    }
+    res.status(200).json({ message: 'Logged out successfully' })
+  } catch (error) {
+    next(error)
+  }
+}
+

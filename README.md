@@ -24,20 +24,6 @@
 
 ---
 
-##### 🖥️ Login Demo
-![](public/login.gif)
-
----
-
-##### 💻 Sign in with Google Demo
-![](public/google.gif)
-
----
-
-##### 🖥️ Sign up Demo
-![](public/signup.gif)
-
----
 
 ##### 🛡️ Password and Account Security
 
@@ -46,15 +32,12 @@
 > - **Password Encryption**: Use bcrypt to encrypt and safeguard user passwords.
 > - **Secure Data Transmission**: Employ JWT to securely transmit information between parties.
 
-![](public/reset-password.gif)
 
 ##### 🪪 Admin Controls and User Roles 👩🏻‍💻
 
 > - **Immediate User Suspension**: Admins can instantly suspend users to protect company data and system integrity in urgent situations.
 > - **Role-Based Authorization**: Assign roles as User or Admin, with appropriate permissions for each.
 > - **Status Bar**: Display the current user and their assigned role, providing a clear overview of their status.
-
-![](public/status.gif)
 
 ---
 
@@ -79,13 +62,10 @@
 > - **Task Management**: The root user can view, edit, and delete all tasks.
 > - **Task Creator Privileges**: Task creators can view, edit, update, and delete tasks they created.
 > - **Task Deletion**: Tasks can only be deleted by the admin or root user who created them.
-> - **Task Status**: Tasks can have statuses of PENDING, EXPIRED, or COMPLETED.
+> - **Task Status**: Tasks can have statuses of PENDING or COMPLETED.
 > - **Task Details**: The status bar shows the task creator, created, and edited date-time details.
 > - **Task Assignment Viewing**: Admin and root users can view who has been assigned to a task via the list.
 
-![](public/tasks.gif)
-
----
 
 #### 📓 Note Management ✏️
 
@@ -108,6 +88,7 @@ REACT_APP_SERVER_URL=     # The base URL of your backend API, e.g., http://local
 REACT_APP_SOCKET_URL=     # WebSocket server URL, e.g., ws://localhost:5000
 REACT_APP_BASE_URL=       # Base URL of the frontend application, e.g., http://localhost:3000
 REACT_APP_SITE_KEY=       # reCAPTCHA v2 or v3 Site Key (used on the client side)
+REACT_APP_VAPID_PUBLIC_KEY= # VAPID public key for web push notifications
 ```
 
 > ⚠️ Note: All environment variables in React must begin with REACT_APP_ to be accessible in the app.
@@ -134,10 +115,9 @@ REFRESH_TOKEN_SECRET=      # Secret for generating refresh tokens
 SESSION_TOKEN_SECRET=      # Secret for session tokens
 OTP_TOKEN_SECRET=          # Secret used for generating OTP codes
 
-# Third-Party Services
-GOOGLE_CLIENT_ID=          # Google OAuth Client ID
-GOOGLE_CLIENT_SECRET=      # Google OAuth Client Secret
-RECAPTCHA_SECRET_KEY=      # Google reCAPTCHA secret key
+# Web Push Notifications
+VAPID_PUBLIC_KEY=          # VAPID public key for web push notifications
+VAPID_PRIVATE_KEY=         # VAPID private key for web push notifications
 
 # Admin Credentials (for initial setup)
 ADMIN_EMAIL=               # Default admin email

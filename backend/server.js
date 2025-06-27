@@ -39,6 +39,7 @@ app.use(express.json())
 app.use(cookieParser())
 
 app.use('/api/auth', require('./routes/auth'))
+// app.use('/api/push', require('./routes/push'))
 
 app.use(requireAuth)
 

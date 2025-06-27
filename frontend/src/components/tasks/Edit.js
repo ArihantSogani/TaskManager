@@ -104,7 +104,6 @@ const Edit = ({ task }) => {
             <select className="form-select" aria-label="select status" defaultValue={task.status} ref={statusRef}>
               <option value="Pending">Pending</option>
               <option value="Completed">Completed</option>
-              <option value="Expired">Expired</option>
             </select>
           </Form.Group>
           {error && (<Alert variant={'danger'}>{error}</Alert>)}

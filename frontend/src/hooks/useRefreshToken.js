@@ -14,16 +14,22 @@ const useRefreshToken = () => {
             dispatch({type: 'LOGIN', payload: {...decoded.userInfo, accessToken: response.data}})
             return response.data
         } catch (error) {
-            // console.log(error)
-            const wrongToken = (error.response.status === 403 && error.response.data.error === "Forbidden")
-            const userNotFound = error.response.status === 401
-            const isBlocked = error.response.status === 400
-            if(wrongToken || userNotFound || isBlocked){
+            // Only logout for actual authentication failures
+            const isAuthError = error.response?.status === 401 && (
+                error.response?.data?.error === 'Unauthorized' ||
+                error.response?.data?.error === 'Refresh token expired' ||
+                error.response?.data?.error === 'Invalid refresh token'
+            )
+            const isBlocked = error.response?.status === 400 && error.response?.data?.error === 'Your account has been blocked'
+            
+            if (isAuthError || isBlocked) {
                 logout()
-                return
+                return null
             }
+            
+            // For other errors, throw the error to be handled by the caller
+            throw error
         }
-
     }
     return refresh 
 } 

@@ -1,13 +1,24 @@
-const Task = require('../models/task')
+const Task = require('../models/Task')
 const User = require('../models/user/User')
 const ROLES_LIST = require('../config/rolesList')
 const { CustomError } = require('../middleware/errorHandler')
 const { validateAuthInputField, validateObjectId } = require('../utils/validation')
 const notificationService = require('../services/notificationService')
+// const pushNotificationService = require('../services/pushNotificationService')
 
 exports.getAll = async (req, res, next) => {
   try {
     const userId = req.user._id
+    
+    // Migration: Update any existing "Expired" tasks to "Pending"
+    try {
+      await Task.updateMany(
+        { status: 'Expired' },
+        { status: 'Pending' }
+      )
+    } catch (migrationError) {
+      console.log('Migration completed or no expired tasks found')
+    }
   
     const task = {
       Root: await Task.find().sort({ createdAt: -1 }).populate('createdBy', 'name').populate('assignedTo', 'name').lean(),
@@ -130,7 +141,7 @@ exports.update = async (req, res, next) => {
     }
 
     // If it's a status update, validate the status
-    if (status && !['Pending', 'Completed', 'Expired'].includes(status)) {
+    if (status && !['Pending', 'Completed'].includes(status)) {
       throw new CustomError('Invalid status value', 400)
     }
 

@@ -17,14 +17,19 @@ const PersistLogin = () => {
         const verifyRefreshToken = async () => {
             try {
                 await refresh() 
-            }catch (err) {
-                console.error(err) 
-            }finally {
+            } catch (err) {
+                console.error('Refresh token verification failed:', err) 
+            } finally {
                 isMounted && setIsLoading(false) 
             }
         }
 
-        !auth?.accessToken && persist ? verifyRefreshToken() : setIsLoading(false) 
+        // Only verify refresh token if we don't have an access token and persist is enabled
+        if (!auth?.accessToken && persist) {
+            verifyRefreshToken()
+        } else {
+            setIsLoading(false)
+        }
 
         return () => isMounted = false 
     }, [auth?.accessToken, persist, refresh])
