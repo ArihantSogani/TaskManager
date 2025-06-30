@@ -7,4 +7,3 @@ export const socket = io(SOCKET_URL, {
   withCredentials: true
 }) 
 
-// and on the admin page where we are printing the completed at date and time is should also reflect completed by : username

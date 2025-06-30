@@ -1,4 +1,4 @@
-const Task = require('../models/task')
+const Task = require('../models/Task')
 const User = require('../models/user/User')
 const ROLES_LIST = require('../config/rolesList')
 const { CustomError } = require('../middleware/errorHandler')

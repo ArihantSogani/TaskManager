@@ -6,7 +6,7 @@ import { Modal, Button } from 'react-bootstrap'
 import { usePathContext } from '../../../context/path'
 import { useTasksContext } from '../../../context/task'
 import useAxiosPrivate from '../../../hooks/useAxiosPrivate'
-import { FaUserPlus } from 'react-icons/fa'
+// import { FaUserPlus } from 'react-icons/fa'
 import { useAuthContext } from '../../../hooks/useAuthContext'
 import { socket } from '../../../socket'
 
