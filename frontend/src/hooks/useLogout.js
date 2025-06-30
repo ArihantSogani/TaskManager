@@ -1,23 +1,21 @@
-import { useAuthContext } from '../context/auth'
+import { useAuthContext } from './useAuthContext'
+import { useTasksContext } from '../context/task'
 import { useUserContext } from '../context/user'
 import usePersist from './usePersist'
 import axios from '../api/axios' 
-import io from 'socket.io-client'
+// import { io } from 'socket.io-client'
 import { useNavigate } from 'react-router-dom'
 // import pushNotificationService from '../services/pushNotification'
 
 export const useLogout = () => {
-  const { dispatch } = useAuthContext()
+  const { dispatch, auth } = useAuthContext()
+  const { dispatch: dispatchTasks } = useTasksContext()
   const { dispatch: dispatchUsers } = useUserContext()
   const { setPersist } = usePersist()
   const navigate = useNavigate()
   
   const logout = async () => {
     try {
-      // Disconnect socket
-      const socket = io(process.env.SERVER_SOCKET_URL)
-      socket.emit('disconnect')
-      
       // Unsubscribe from push notifications removed
       // await pushNotificationService.unsubscribeFromPushNotifications()
       
@@ -28,6 +26,7 @@ export const useLogout = () => {
     } finally {
       // Clear client-side state
       dispatch({ type: 'LOGOUT' })
+      dispatchTasks({ type: 'SET_TASKS', payload: null })
       dispatchUsers({ type: 'SET_USER', payload: null })
       setPersist(false)
       localStorage.removeItem('accessToken')

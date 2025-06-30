@@ -1,4 +1,3 @@
-// import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthContext } from './context/auth'
 import { usePathContext } from './context/path'
@@ -23,26 +22,15 @@ import NotFound from './pages/error/NotFound'
 import Notifications from './components/Notifications'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import { socket } from './socket'
-import { useEffect } from 'react'
 import { NotificationProvider } from './context/notification'
 
 function App() {
   const { auth } = useAuthContext()
   const { link } = usePathContext()
 
-  useEffect(() => {
-    if (auth && auth._id) {
-      socket.auth = { userId: auth._id };
-      socket.connect();
-      socket.emit('online', auth._id);
-    }
-    return () => {
-      if (socket && socket.connected) {
-        socket.disconnect();
-      }
-    };
-  }, [auth]);
+  // The useEffect hook for socket connection has been removed from App.js.
+  // This logic is now correctly handled inside the <Notifications /> component
+  // to prevent conflicts and ensure a single source of truth for the socket connection.
 
   return (
     <NotificationProvider>
@@ -50,7 +38,12 @@ function App() {
         <BrowserRouter>
           <Navbar />
           <Status />
-          {auth && <Notifications />}
+          {/* 
+            The Notifications component is rendered unconditionally.
+            This is critical because it needs to be mounted to manage the socket lifecycle
+            (connecting when a user logs in, and disconnecting when they log out).
+          */}
+          <Notifications />
           <ToastContainer
             position="top-right"
             autoClose={5000}

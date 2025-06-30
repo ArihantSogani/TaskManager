@@ -7,7 +7,7 @@ import { usePathContext } from '../context/path'
 import useAxiosPrivate from '../hooks/useAxiosPrivate'
 import Details from '../components/users/Index'
 import Add from '../components/users/Add'
-import io from 'socket.io-client'
+import { socket } from '../socket'
 
 const User = () => {
   const { auth } = useAuthContext()
@@ -18,10 +18,10 @@ const User = () => {
   const axiosPrivate = useAxiosPrivate()
   const isAdminOrRoot = auth.roles.includes(ROLES.Admin) || auth.roles.includes(ROLES.Root)
   const admin = auth && isAdminOrRoot
+  const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(null)
   
   useEffect(() => {
-    const socket = io(process.env.REACT_APP_SOCKET_URL)
-
     setTitle("User Management")
     let isMounted = true
     const abortController = new AbortController()
@@ -50,6 +50,10 @@ const User = () => {
 
     socket.on('adminUpdateUserList', (user) => {
       dispatch({type: 'SET_USER', payload: user})
+    })
+
+    socket.on('user-update', (data) => {
+      // Handle user update
     })
 
     return () => {
