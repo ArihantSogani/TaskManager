@@ -7,7 +7,7 @@ import { usePathContext } from '../../../context/path'
 import { useTasksContext } from '../../../context/task'
 import useAxiosPrivate from '../../../hooks/useAxiosPrivate'
 // import { FaUserPlus } from 'react-icons/fa'
-import { useAuthContext } from '../../../hooks/useAuthContext'
+// import { useAuthContext } from '../../../hooks/useAuthContext'
 import { socket } from '../../../socket'
 
 const Add = ({ task_id }) => {
@@ -15,12 +15,12 @@ const Add = ({ task_id }) => {
   const axiosPrivate = useAxiosPrivate()
   const { setTitle } = usePathContext()
   const { setAssignedUser } = useTasksContext()
-  const { auth } = useAuthContext()
+  // const { auth } = useAuthContext()
 
   const [notAssignedUser, setNotAssignedUser] = useState([])
   const [show, setShow] = useState(false)
   const [error, setError] = useState(null)
-  const [success, setSuccess] = useState(null)
+  // const [success, setSuccess] = useState(null)
   const nameRef = useRef()
 
   useEffect(() => {

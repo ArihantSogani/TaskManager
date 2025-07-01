@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Col, Row, Stack } from "react-bootstrap"
 import { GoSearch } from "react-icons/go"
 import { BiArrowBack } from 'react-icons/bi'
-import { FaAddressCard, FaTags } from "react-icons/fa"
-import { BsFillPersonFill, BsPlusLg, BsPencilSquare } from "react-icons/bs"
+import { FaAddressCard} from "react-icons/fa"
+import { BsFillPersonFill, BsPlusLg} from "react-icons/bs"
 import { Link } from "react-router-dom"
 import { ROLES } from '../config/roles'
 import { useNavigate } from 'react-router-dom'
@@ -69,7 +69,7 @@ const Note = () => {
       isMounted = false
       abortController.abort()
     }
-  },[])
+  },[ auth, targetUser, setTitle, axiosPrivate, admin ])
 
   const filteredNote = useMemo(() => notes?.filter(note => {
     const tags = tag?.map(t => t.value)

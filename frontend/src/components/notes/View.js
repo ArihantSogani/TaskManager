@@ -66,7 +66,7 @@ const View = () => {
       isMounted = false
       abortController.abort()
     }
-  },[])
+  },[ auth, id, navigate, setTitle, axiosPrivate, targetUser ])
 
   const deleteNote = async () => {
     try {

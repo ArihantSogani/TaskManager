@@ -99,7 +99,7 @@ const Task = () => {
       isMounted = false
       abortController.abort()
     }
-  },[])
+  },[ auth, targetUser, setTitle, axiosPrivate, dispatch, admin ])
 
   return (
     <>

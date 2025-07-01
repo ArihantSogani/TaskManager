@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom'
 // import pushNotificationService from '../services/pushNotification'
 
 export const useLogout = () => {
-  const { dispatch, auth } = useAuthContext()
+  const { dispatch } = useAuthContext()
   const { dispatch: dispatchTasks } = useTasksContext()
   const { dispatch: dispatchUsers } = useUserContext()
   const { setPersist } = usePersist()

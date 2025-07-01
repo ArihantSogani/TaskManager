@@ -45,7 +45,7 @@ const Assgin = () => {
       isMounted = false
       abortController.abort()
     }
-  },[])
+  },[ auth, id, setAssignedUser, axiosPrivate, setTitle])
   
   const filteredLists = useMemo(() => assignedUser.assignedTo?.filter(t => t.name.toLowerCase().includes(query.toLowerCase())), [assignedUser, query])
 

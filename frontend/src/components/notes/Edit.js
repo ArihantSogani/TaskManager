@@ -68,7 +68,7 @@ const Edit = () => {
       isMounted = false
       abortController.abort()
     }
-  },[])
+  },[auth, id, navigate, setTitle, axiosPrivate, targetUser])
 
   const handleSubmit = async (e) => {
     e.preventDefault()

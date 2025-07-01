@@ -18,8 +18,8 @@ const User = () => {
   const axiosPrivate = useAxiosPrivate()
   const isAdminOrRoot = auth.roles.includes(ROLES.Admin) || auth.roles.includes(ROLES.Root)
   const admin = auth && isAdminOrRoot
-  const [error, setError] = useState(null)
-  const [success, setSuccess] = useState(null)
+  // const [error, setError] = useState(null)
+  // const [success, setSuccess] = useState(null)
   
   useEffect(() => {
     setTitle("User Management")
@@ -61,7 +61,7 @@ const User = () => {
       socket.off('adminUpdateUserList')
       abortController.abort()
     }
-  },[])
+  },[ auth, dispatch, axiosPrivate, setTitle ])
 
   const filteredNames = useMemo(() => users?.filter(user => user.name.toLowerCase().includes(query.toLowerCase())), [users, query])
 
