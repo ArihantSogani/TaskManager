@@ -7,7 +7,7 @@ const socketIo = require('socket.io')
 const mongoose = require('mongoose')
 const helmet = require('helmet')
 const cookieParser = require('cookie-parser')
-const corsMiddleware = require('./config/corsOptions')
+// const corsMiddleware = require('./config/corsOptions')
 const { logger } = require('./middleware/logger')
 const { errorHandler, notFound } = require('./middleware/errorHandler')
 const connectDB = require('./config/dbConn')
@@ -16,24 +16,25 @@ const requireAuth = require('./middleware/requireAuth')
 const notificationService = require('./services/notificationService')
 const notificationRoutes = require('./routes/notification')
 
+const cors = require('cors');
+
 const app = express()
 const server = http.createServer(app)
 
-// ✅ Initialize socket.io properly
-const io = socketIo(server, {
-  cors: {
-    origin: '*', // adjust in production
-    methods: ['GET', 'POST'],
-  },
-})
+  app.use(cors({
+    origin: 'http://localhost:3000', // or '*' for all origins (not recommended for production)
+    credentials: true, // if you use cookies or authentication
+  }));
 
+// ✅ Initialize socket.io properly
+const io = socketIo(server)
 // ✅ Initialize DB
 mongoose.set('strictQuery', false)
 connectDB()
 
 // ✅ Middleware
 app.use(helmet())
-app.use(corsMiddleware)
+// app.use(corsMiddleware)
 app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
 app.use(cookieParser())

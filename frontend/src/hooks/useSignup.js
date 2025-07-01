@@ -1,13 +1,7 @@
 import { useState } from 'react'
-import { useAuthContext } from '../context/auth'
-import { useNavigate } from 'react-router-dom'
 import axios from '../api/axios'
-import jwt_decode from 'jwt-decode'
-import { toast } from 'react-toastify'
 
 export const useSignup = () => {
-  const navigate = useNavigate()
-  const { dispatch } = useAuthContext()
   const [error, setError] = useState(null)
   const [isLoading, setIsLoading] = useState(null)
 
