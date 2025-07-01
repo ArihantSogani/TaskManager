@@ -24,14 +24,14 @@ const server = http.createServer(app)
   app.use(cors({
     origin: ['https://task-manager-mern-sooty.vercel.app/'], // Replace with your client URL
     // origin: 'http://localhost:3000/', // or '*' for all origins (not recommended for production)
-    // credentials: false, // if you use cookies or authentication
+    credentials: true, // if you use cookies or authentication
   }));
 
 // ✅ Initialize socket.io properly
 const io = socketIo(server,{
   cors: {
     origin: [ 'https://task-manager-mern-sooty.vercel.app/'], // Replace with your client URL
-    // credentials: true, // Allow cookies to be sent with requests
+    credentials: true, // Allow cookies to be sent with requests
   },
 })
 // ✅ Initialize DB
