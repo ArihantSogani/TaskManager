@@ -31,6 +31,7 @@ const server = http.createServer(app)
 const io = socketIo(server,{
   cors: {
     origin: [ 'https://task-manager-mern-sooty.vercel.app/'], // Replace with your client URL
+    methods: ['GET', 'POST'],
     credentials: true, // Allow cookies to be sent with requests
   },
 })
