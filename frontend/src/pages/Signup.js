@@ -26,9 +26,7 @@ const Signup = () => {
     const result = await signup(nameRef.current.value, emailRef.current.value.trim(), passwordRef.current.value.trim(), persist)
     if (result?.success) {
       toast.success(`Welcome ${result.name}! Redirecting to dashboard...`)
-      setTimeout(() => {
-        handleBack();
-      }, 1000)
+      handleBack();
     }
   }
 

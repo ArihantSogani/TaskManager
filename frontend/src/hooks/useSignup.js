@@ -12,6 +12,11 @@ export const useSignup = () => {
   const [isLoading, setIsLoading] = useState(null)
 
   
+  // const handleBack = () => {
+  //   // setTitle("Welcome")
+  //   navigate("/login")
+  // }
+
   const signup = async (name, email, password, persist) => {
     setIsLoading(true)
     setError(null)
@@ -19,27 +24,9 @@ export const useSignup = () => {
     try {
       const response = await axios.post('/api/auth/signup', { name, email, password, persist })
       console.log('Signup successful, API response:', response.data)
-      const accessToken = response.data
-      const decoded = jwt_decode(accessToken)
-      
-      const authPayload = { 
-        accessToken,
-        userInfo: decoded.userInfo
-      }
-      console.log('Dispatching LOGIN with payload:', authPayload)
-      // Save auth context
-      dispatch({ 
-        type: 'LOGIN', 
-        payload: authPayload
-      })
-
+      // Do not decode token, set auth, or dispatch LOGIN here
       setIsLoading(false)
-      console.log('Returning success from useSignup.')
-      
-      // Show success message and navigate to dashboard
-      toast.success(`Welcome ${decoded.userInfo.name}!`)
-      navigate('/')
-      return { success: true, name: decoded.userInfo.name }
+      return { success: true, name }
     } catch (error) {
       setIsLoading(false)
       console.error('Signup error:', error.response?.data || error.message)
