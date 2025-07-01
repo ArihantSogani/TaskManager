@@ -22,7 +22,7 @@ const app = express()
 const server = http.createServer(app)
 
   app.use(cors({
-    origin: '*', // or '*' for all origins (not recommended for production)
+    origin: 'http://localhost:3000/', // or '*' for all origins (not recommended for production)
     credentials: false, // if you use cookies or authentication
   }));
 
