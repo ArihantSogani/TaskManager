@@ -22,7 +22,7 @@ const app = express()
 const server = http.createServer(app)
 
   app.use(cors({
-    origin: ['http://localhost:3000', 'https://task-manager-mern-sooty.vercel.app/'], // Replace with your client URL
+    origin: ['https://task-manager-mern-sooty.vercel.app/'], // Replace with your client URL
     // origin: 'http://localhost:3000/', // or '*' for all origins (not recommended for production)
     // credentials: false, // if you use cookies or authentication
   }));
@@ -30,7 +30,7 @@ const server = http.createServer(app)
 // ✅ Initialize socket.io properly
 const io = socketIo(server,{
   cors: {
-    origin: ['http://localhost:3000', 'https://task-manager-mern-sooty.vercel.app/'], // Replace with your client URL
+    origin: [ 'https://task-manager-mern-sooty.vercel.app/'], // Replace with your client URL
     // credentials: true, // Allow cookies to be sent with requests
   },
 })

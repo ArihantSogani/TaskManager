@@ -5,7 +5,7 @@ const { CustomError } = require('./errorHandler')
 const requireAuth = async (req, res, next) => {
   try {
     const { authorization } = req.headers
-  console.log('Authorization header:', authorization);
+    console.log('Authorization header:', authorization);
   
     if (!authorization || !authorization.startsWith('Bearer ')) throw new CustomError('Request is not authorized', 401)
       
