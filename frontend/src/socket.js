@@ -4,6 +4,7 @@ const SOCKET_URL = process.env.REACT_APP_SOCKET_URL
 
 export const socket = io(SOCKET_URL, {
   autoConnect: false,
-  withCredentials: true
+  withCredentials: true,
+  transports: ['websocket'],
 }) 
 

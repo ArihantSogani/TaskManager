@@ -135,8 +135,6 @@ const Notifications = () => {
     }
   }, [auth]);
 
-
-  // This component does not render anything itself.
   return null;
 };
 
