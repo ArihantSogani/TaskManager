@@ -19,6 +19,7 @@ const notificationRoutes = require('./routes/notification')
 const cors = require('cors');
 
 const app = express()
+app.set('trust proxy', 1) // Trust first proxy (Render, Heroku, etc.)
 const server = http.createServer(app)
 
   app.use(cors({
