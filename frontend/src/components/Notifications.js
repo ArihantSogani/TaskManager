@@ -15,7 +15,7 @@ function showDesktopNotification(title, message) {
     console.log('3. Permission is granted. Creating new Notification().');
     new Notification(title, {
       body: message,
-      icon: '/favicon.ico',
+      icon: '/COmplyRelaxLogo.png', // Ensure this path is correct
     });
     console.log('4. Notification should be visible now.');
   } else {
