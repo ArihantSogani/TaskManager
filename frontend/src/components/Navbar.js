@@ -169,16 +169,6 @@ const handleDisableNotification = async () => {
                       ))}
                     </Dropdown.Menu>
                   </Dropdown>
-                  {/* Enable/Disable Notification Button */}
-                  <Button
-                    variant={isSubscribed ? 'outline-danger' : 'outline-info'}
-                    size="sm"
-                    style={{ marginLeft: 8 }}
-                    onClick={isSubscribed ? handleDisableNotification : handleEnableNotification}
-                    disabled={loading}
-                  >
-                    {isSubscribed ? 'Disable Notification' : 'Enable Notification'}
-                  </Button>
                   <Button variant="outline-warning" className="mx-3" onClick={() => logout()}>Log Out</Button>
                 </>
               )}
