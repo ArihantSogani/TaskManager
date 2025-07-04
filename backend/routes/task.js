@@ -2,6 +2,32 @@ const router = require('express').Router()
 const tasksController = require('../controllers/task')
 const requireRoles = require('../middleware/requireRoles')
 const ROLES_LIST = require('../config/rolesList')
+const multer = require('multer')
+const path = require('path')
+
+// Multer storage config
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, '../../uploads'))
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+    cb(null, uniqueSuffix + '-' + file.originalname)
+  }
+})
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    const allowed = [
+      'image/png', 'image/jpeg', 'image/jpg',
+      'application/pdf',
+      'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ]
+    if (allowed.includes(file.mimetype)) cb(null, true)
+    else cb(new Error('Invalid file type'))
+  }
+})
 
 // Routes accessible by all authenticated users
 router.route('/')
@@ -27,7 +53,7 @@ router.route('/:id')
 router.use(requireRoles([ROLES_LIST.Root, ROLES_LIST.Admin]))
 
 router.route('/')
-  .post(tasksController.create)
+  .post(upload.array('files'), tasksController.create)
 
 router.route('/:id')
   .get(tasksController.getById)

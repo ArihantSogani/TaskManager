@@ -6,7 +6,10 @@ const { validateAuthInputField, validateObjectId } = require('../utils/validatio
 
 exports.getAll = async (req, res, next) => {
     try {
-        const query = req.roles.includes(ROLES_LIST.Root) ? {} : { $or: [{ roles: ROLES_LIST.User }, { _id: req.user._id }], roles: { $ne: ROLES_LIST.Root }}
+        // Allow Admins to see all users except Root
+        const query = req.roles.includes(ROLES_LIST.Root)
+          ? {}
+          : { roles: { $ne: ROLES_LIST.Root } }
         const users = await User.find(query).sort({ isOnline: -1, lastActive: -1 }).select('-password -otp').lean().exec()
         if (!users?.length) throw new CustomError('No users found', 404)
         

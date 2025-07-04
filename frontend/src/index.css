@@ -1,14 +1,58 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;800&family=VT323&display=swap');
 
-:root {
-  --primary: #379af0;
-  --error: #e7195a;
+/* Global font and base styles for pixel-perfect match */
+body, html, #root {
+  font-family: 'Inter', 'Nunito', 'Segoe UI', Arial, sans-serif;
+  font-size: 16px;
+  background: #f7f8fa;
+  color: #222;
+  margin: 0;
+  padding: 0;
 }
 
+.card {
+  border: none !important;
+  box-shadow: none !important;
+  background: #fff;
+}
+
+/* Remove default button outlines and set base button style */
+button, .btn {
+  font-family: inherit;
+  font-size: 1em;
+  border-radius: 8px;
+  outline: none;
+  box-shadow: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: 1em;
+}
+
+:root {
+  --primary: #2563eb;
+  --danger: #dc3545;
+  --warning: #ffc107;
+  --success: #28a745;
+  --gray: #e5e7eb;
+  --border-radius: 16px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+/* Utility classes for spacing and layout */
+.gap-2 { gap: 0.5rem; }
+.gap-3 { gap: 1rem; }
+.gap-4 { gap: 1.5rem; }
+.rounded-16 { border-radius: 16px; }
+.bg-white { background: #fff; }
+
+/* Hide scrollbars for horizontal overflow */
+::-webkit-scrollbar:horizontal { display: none; }
+
 body {
-  background: #f1f1f1;
   margin: 0;
-  font-family: "Poppins";
 }
 
 header {
@@ -111,14 +155,14 @@ form button {
 div.error {
   padding: 10px;
   background: #ffefef;
-  border: 1px solid var(--error);
-  color: var(--error);
+  border: 1px solid var(--danger);
+  color: var(--danger);
   border-radius: 4px;
   margin: 20px 0;
 }
 
 input.error {
-  border: 1px solid var(--error);
+  border: 1px solid var(--danger);
 }
 
 nav {
@@ -179,10 +223,6 @@ form.login {
 
 .plus {
   opacity: 0.8;
-}
-
-.card {
-  border-radius: 12px !important;
 }
 
 .center {
@@ -715,4 +755,51 @@ form.login {
   .due-date-section .fs-5 {
     margin-bottom: 0.5rem;
   }
+}
+
+.task-border-completed {
+  border: 2px solid #28a745 !important; /* green */
+}
+.task-border-overdue {
+  border: 2px solid #dc3545 !important; /* red */
+}
+.task-border-today {
+  border: 2px solid #fd7e14 !important; /* orange */
+}
+.task-border-future {
+  border: 2px solid #adb5bd !important; /* grey */
+}
+.task-border-default {
+  border: 2px solid #adb5bd !important; /* gray */
+}
+.task-border-upcoming {
+  border: 2px solid #0dcaf0 !important; /* blue for this week/upcoming */
+}
+
+.task-priority-badge {
+  font-size: 1em;
+  padding: 0.25em 0.75em;
+  border-radius: 1em;
+  font-weight: 500;
+}
+.task-priority-low {
+  background: #e6f4ea;
+  color: #218838;
+  border: 1px solid #218838;
+}
+.task-priority-medium {
+  background: #fff3cd;
+  color: #fd7e14;
+  border: 1px solid #fd7e14;
+}
+.task-priority-high {
+  background: #f8d7da;
+  color: #dc3545;
+  border: 1px solid #dc3545;
+}
+
+.task-priority-label {
+  font-weight: bold;
+  letter-spacing: 1px;
+  font-size: 0.85em;
 }

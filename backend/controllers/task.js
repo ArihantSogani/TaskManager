@@ -22,9 +22,9 @@ exports.getAll = async (req, res, next) => {
     }
   
     const task = {
-      Root: await Task.find().sort({ createdAt: -1 }).populate('createdBy', 'name').populate('assignedTo', 'name').lean(),
-      Admin: await Task.find({ createdBy: userId }).populate('createdBy', 'name').populate('assignedTo', 'name').sort({ createdAt: -1 }).lean(),
-      User: await Task.find({ assignedTo: userId }).populate('createdBy', 'name').populate('assignedTo', 'name').sort({ createdAt: -1 }).lean()
+      Root: await Task.find().sort({ createdAt: -1 }).populate('createdBy', 'name').populate('assignedTo', 'name').populate('comments.user', 'name').lean(),
+      Admin: await Task.find({ createdBy: userId }).populate('createdBy', 'name').populate('assignedTo', 'name').populate('comments.user', 'name').sort({ createdAt: -1 }).lean(),
+      User: await Task.find({ assignedTo: userId }).populate('createdBy', 'name').populate('assignedTo', 'name').populate('comments.user', 'name').sort({ createdAt: -1 }).lean()
     }
   
     const tasks = task[req.roles]
@@ -70,21 +70,42 @@ exports.getById = async (req, res, next) => {
 
 exports.create = async (req, res, next) => {
   try { 
-    const { title, description, priority, dueDate, assignedTo } = req.body
+    console.log('--- CREATE TASK CONTROLLER CALLED ---');
+    console.log('BODY:', req.body);
+    console.log('FILES:', req.files);
+    let { title, description, priority, dueDate, assignedTo } = req.body;
+    // If assignedTo is a string (from form-data), convert to array
+    if (typeof assignedTo === 'string') assignedTo = [assignedTo];
+    if (Array.isArray(assignedTo)) {
+      assignedTo = assignedTo.filter(Boolean);
+    } else {
+      assignedTo = [];
+    }
 
-    validateAuthInputField({ title, description })
+    validateAuthInputField({ title, description });
   
-    const adminId = req.user._id
+    const adminId = req.user._id;
 
-    const task = await Task.create({ 
-      title, 
-      description, 
+    // Handle file attachments
+    let attachments = [];
+    if (req.files && req.files.length > 0) {
+      attachments = req.files.map(file => ({
+        filename: file.filename,
+        originalname: file.originalname,
+        mimetype: file.mimetype
+      }));
+    }
+
+    const task = await Task.create({
+      title,
+      description,
       createdBy: adminId,
       assignedTo: assignedTo || [],
       priority: priority || 'Medium',
-      dueDate: dueDate || null
-    })
-    if(!task) throw new CustomError('Something went wrong, during creating new task', 400)
+      dueDate: dueDate || null,
+      attachments
+    });
+    if (!task) throw new CustomError('Something went wrong, during creating new task', 400);
 
     // Create notifications for assigned users if any
     if (assignedTo && assignedTo.length > 0) {
@@ -142,7 +163,7 @@ exports.update = async (req, res, next) => {
     }
 
     // If it's a status update, validate the status
-    if (status && !['Pending', 'Completed'].includes(status)) {
+    if (status && !['Pending', 'In Progress', 'Completed', 'On Hold'].includes(status)) {
       throw new CustomError('Invalid status value', 400)
     }
 
@@ -161,6 +182,18 @@ exports.update = async (req, res, next) => {
 
     if (!updatedTask) {
       throw new CustomError('Failed to update task', 400)
+    }
+
+    // Log status change activity
+    if (status && status !== task.status) {
+      task.activity.push({
+        type: 'status',
+        user: ownerId,
+        status: status,
+        timestamp: new Date(),
+        details: `Status changed to ${status}`
+      });
+      await task.save();
     }
 
     // Send notification if status is updated
@@ -253,20 +286,46 @@ exports.assignUser = async (req, res, next) => {
     const task = await Task.findById(task_id).exec()
     if (!task) throw new CustomError('Task not found', 404)
 
-    const owner = req.roles.includes(ROLES_LIST.Admin) && (task.createdBy.toString() === ownerId.toString())
-    const createRight = owner || req.roles.includes(ROLES_LIST.Root)
-    if (!createRight) throw new CustomError('Not authorized to assign this user', 401)
-  
-    // Add new users to assignedTo
-    task.assignedTo.push(...user_id)
-    await task.save()
+    // Allow current assignee or admin/root
+    const isCurrentAssignee = task.assignedTo.some(u => u.toString() === ownerId.toString());
+    const isAdmin = req.roles && (req.roles.includes('Admin') || req.roles.includes('Root'));
+    if (!isCurrentAssignee && !isAdmin) throw new CustomError('Only the current assignee or an admin can reassign this task', 401)
+
+    let prevAssigneeUser = null;
+    let newAssigneeUser = null;
+
+    if (isAdmin) {
+      // Admin: assign to any set of users
+      task.assignedTo = user_id;
+      await task.save();
+      // Log activity for each new assignment (optional: can be improved)
+      prevAssigneeUser = null;
+      newAssigneeUser = null;
+    } else {
+      // User: can only replace their own assignment
+      if (user_id.length !== 1) throw new CustomError('You can only reassign to one user at a time', 400);
+      const idx = task.assignedTo.findIndex(u => u.toString() === ownerId.toString());
+      if (idx === -1) throw new CustomError('You are not assigned to this task', 401);
+      prevAssigneeUser = await User.findById(ownerId).select('name').lean();
+      newAssigneeUser = await User.findById(user_id[0]).select('name').lean();
+      task.assignedTo[idx] = user_id[0];
+      await task.save();
+      // Log activity for this reassignment
+      task.activity.push({
+        type: 'assigned',
+        user: ownerId,
+        to: user_id[0],
+        timestamp: new Date(),
+        details: `Task reassigned from ${prevAssigneeUser?.name || ownerId} to ${newAssigneeUser?.name || user_id[0]}`
+      });
+      await task.save();
+    }
 
     // Create notifications for newly assigned users
     const notification = {
       message: `You have been assigned to task "${task.title}"`,
       taskId: task._id
     }
-    
     await Promise.all(user_id.map(userId => 
       notificationService.sendNotification(userId, notification)
     ))
@@ -421,11 +480,17 @@ exports.getUnassignedUsers = async (req, res, next) => {
     const task = await Task.findById(taskId).select('assignedTo').lean().exec()
     if (!task) throw new CustomError('Task not found', 404)
 
-    // Get all active users who are not assigned to this task
+    // Allow current assignee or admin/root
+    const ownerId = req.user._id;
+    const isCurrentAssignee = task.assignedTo.length === 1 && task.assignedTo[0].toString() === ownerId.toString();
+    const isAdmin = req.roles && (req.roles.includes('Admin') || req.roles.includes('Root'));
+    if (!isCurrentAssignee && !isAdmin) throw new CustomError('Only the current assignee or an admin can reassign this task', 401)
+
+    // Allow all active users (including Admins) except those already assigned
     const unassignedUsers = await User.find({
       _id: { $nin: task.assignedTo },
       active: true
-    }).select('name email').lean().exec()
+    }).select('name email roles').lean().exec()
 
     if (!unassignedUsers?.length) throw new CustomError('No unassigned users found', 404)
     

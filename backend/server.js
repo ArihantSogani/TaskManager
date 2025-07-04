@@ -7,7 +7,6 @@ const socketIo = require('socket.io')
 const mongoose = require('mongoose')
 const helmet = require('helmet')
 const cookieParser = require('cookie-parser')
-// const corsMiddleware = require('./config/corsOptions')
 const { logger } = require('./middleware/logger')
 const { errorHandler, notFound } = require('./middleware/errorHandler')
 const connectDB = require('./config/dbConn')
@@ -23,16 +22,17 @@ app.set('trust proxy', 1) // Trust first proxy (Render, Heroku, etc.)
 const server = http.createServer(app)
 
   app.use(cors({
-    origin: 'https://task-manager-mern-sooty.vercel.app', // Replace with your client URL
-    // origin: 'http://localhost:3000/', // or '*' for all origins (not recommended for production)
+    // origin: 'https://task-manager-mern-sooty.vercel.app', // uncomment this for deploying it live
+    origin: 'http://localhost:3000', // or '*' for all origins (not recommended for production)
     credentials: true, // if you use cookies or authentication
   }));
 
 // ✅ Initialize socket.io properly
 const io = socketIo(server,{
   cors: {
-    origin:  'https://task-manager-mern-sooty.vercel.app', // Replace with your client URL
-    methods: ['GET', 'POST'],
+    // origin:  'https://task-manager-mern-sooty.vercel.app', // uncomment this for deploying it live
+    // methods: ['GET', 'POST'], // uncomment this for deploying it live
+    origin: 'http://localhost:3000',
     credentials: true, // Allow cookies to be sent with requests
   },
 })
@@ -46,6 +46,7 @@ app.use(helmet())
 app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
 app.use(cookieParser())
+app.use('/uploads', express.static(require('path').join(__dirname, '../uploads')))
 
 // ✅ Routes (no auth needed)
 app.use('/api/auth', require('./routes/auth'))

@@ -71,7 +71,24 @@ const taskSchema = new mongoose.Schema(
                 type: Date,
                 default: Date.now
             }
-        }]
+        }],
+        attachments: [
+            {
+                filename: String,
+                originalname: String,
+                mimetype: String
+            }
+        ],
+        activity: [
+            {
+                type: { type: String, enum: ['assigned', 'status'], required: true },
+                user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+                to: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // for assignment events
+                status: { type: String }, // for status change events
+                timestamp: { type: Date, default: Date.now },
+                details: { type: String }
+            }
+        ]
     }, 
     {
         timestamps: true

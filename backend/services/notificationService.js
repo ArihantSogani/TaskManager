@@ -1,4 +1,5 @@
 const notificationController = require('../controllers/notification');
+const Notification = require('../models/Notification');
 let io;
 
 const initializeSocket = (socketIo) => {
@@ -11,7 +12,12 @@ const sendNotification = async (userId, notification) => {
         console.error('Socket.io not initialized in notification service');
         throw new Error('Socket.io not initialized');
     }
-    
+    // Persist notification to DB
+    await Notification.create({
+      user: userId,
+      message: notification.message,
+      read: false
+    });
     console.log('Emitting notification to user:', userId, 'with message:', notification.message);
     console.log('Available rooms:', Array.from(io.sockets.adapter.rooms.keys()));
     
@@ -40,7 +46,12 @@ const sendTaskUpdate = async (userId, update) => {
         console.error('Socket.io not initialized in notification service');
         throw new Error('Socket.io not initialized');
     }
-
+    // Persist notification to DB
+    await Notification.create({
+      user: userId,
+      message: update.message,
+      read: false
+    });
     console.log('Emitting task update to user:', userId, 'with message:', update.message);
     
     io.to(userId.toString()).emit('taskUpdate', {
@@ -60,7 +71,14 @@ const sendTaskComment = async (userIds, comment) => {
         console.error('Socket.io not initialized in notification service');
         throw new Error('Socket.io not initialized');
     }
-
+    // Persist notification to DB for each user
+    await Promise.all(userIds.map(userId =>
+      Notification.create({
+        user: userId,
+        message: comment.message,
+        read: false
+      })
+    ));
     console.log('Emitting task comment to users:', userIds, 'with message:', comment.message);
 
     // Emit to all users involved in the task

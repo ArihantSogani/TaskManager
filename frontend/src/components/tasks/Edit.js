@@ -5,17 +5,24 @@ import { Alert, Button, Form, Modal } from 'react-bootstrap'
 import { useTasksContext } from '../../context/task'
 import { useAuthContext } from '../../context/auth'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate'
+import { AiOutlineUsergroupAdd } from 'react-icons/ai'
+import AssignAdd from './assign/Add'
+import { useNavigate } from 'react-router-dom'
 const validator = require('validator')
 
-const Edit = ({ task }) => {
+const Edit = ({ task, forceShow, setForceShow }) => {
   const axiosPrivate = useAxiosPrivate()
   const { dispatch } =  useTasksContext()
   const { auth } = useAuthContext()
   const [error, setError] = useState(null)
   const [show, setShow] = useState(false)
+  const [showAssign, setShowAssign] = useState(false)
   const titleRef = useRef('')
   const descriptionRef = useRef('')
   const statusRef = useRef('')
+  const modalShow = typeof forceShow === 'boolean' ? forceShow : show;
+  const modalSetShow = setForceShow || setShow;
+  const navigate = useNavigate();
 
   const isAdmin = auth.roles.includes(ROLES.Admin) || auth.roles.includes(ROLES.Root)
   const isAssignedUser = task.assignedTo.some(user => user._id === auth._id)
@@ -60,7 +67,7 @@ const Edit = ({ task }) => {
         const response = await axiosPrivate.patch(`/api/tasks/${task._id}`, updateTask)
         dispatch({type: 'UPDATE_TASK', payload: response.data})
         setError(null)
-        setShow(false)
+        modalSetShow(false)
       } catch (error) {
         statusRef.current.value = task.status
         setError(error.response?.data.error)
@@ -70,6 +77,22 @@ const Edit = ({ task }) => {
     }
   }
     
+  const handleDelete = async () => {
+    if(!auth) {
+      setError('You must be logged in') 
+      modalSetShow(false)
+      return
+    }
+
+    try {
+      await axiosPrivate.delete(`/api/tasks/${task._id}`)
+      dispatch({type: 'DELETE_TASK', payload: task})
+      setError(null)
+      modalSetShow(false)
+    } catch (error) {
+      setError(error.response?.data.error)
+    }
+  }
   
   if (!isAdmin && !isAssignedUser) {
     return null
@@ -77,15 +100,24 @@ const Edit = ({ task }) => {
 
   return (
     <>
-      <button className="btn btn-outlined text-muted taskbtn" onClick={() => setShow(!show)}>
-        <BsPencilSquare className="fs-5"/>
-        <small>&ensp;{isAdmin ? 'EDIT' : 'UPDATE STATUS'}</small>
-      </button>
+      {typeof forceShow !== 'boolean' && (
+        <button className="btn btn-outlined text-muted taskbtn" onClick={() => setShow(!show)}>
+          <BsPencilSquare className="fs-5"/>
+          <small>&ensp;{isAdmin ? 'EDIT' : 'UPDATE STATUS'}</small>
+        </button>
+      )}
 
-      <Modal show={show} onHide={() => {setShow(!show);setError(null)}} centered>
+      <Modal show={modalShow} onHide={() => {modalSetShow(false);setError(null)}} centered>
         <Modal.Header closeButton>
-          <Modal.Title>{isAdmin ? 'Edit Task' : 'Update Task Status'}</Modal.Title>
-        </Modal.Header> 
+          <Modal.Title style={{display: 'flex', alignItems: 'center', gap: 12}}>
+            {isAdmin ? 'Edit Task' : 'Update Task Status'}
+            {(isAdmin || isAssignedUser) && (
+              <Button variant="outline-secondary" size="sm" style={{marginLeft: 0}} onClick={() => setShowAssign(true)} title="Assign User">
+                <AiOutlineUsergroupAdd className="fs-5" />
+              </Button>
+            )}
+          </Modal.Title>
+        </Modal.Header>
         <Modal.Body>
           {isAdmin && (
             <>
@@ -103,15 +135,23 @@ const Edit = ({ task }) => {
             <Form.Label>Status:</Form.Label>
             <select className="form-select" aria-label="select status" defaultValue={task.status} ref={statusRef}>
               <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
               <option value="Completed">Completed</option>
+              <option value="On Hold">On Hold</option>
             </select>
           </Form.Group>
           {error && (<Alert variant={'danger'}>{error}</Alert>)}
         </Modal.Body>
         <Modal.Footer>
+          {isAdmin && (
+            <Button variant="danger" onClick={handleDelete}>Delete Task</Button>
+          )}
           <Button variant="primary" onClick={handleUpdate}>Save Changes</Button>
         </Modal.Footer>
       </Modal>
+      {(isAdmin || isAssignedUser) && showAssign && (
+        <AssignAdd task_id={task._id} show={showAssign} setShow={setShowAssign} />
+      )}
     </>
   )
 }

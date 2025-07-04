@@ -53,4 +53,36 @@ exports.sendToUsers = async (userIds, payload) => {
   for (const userId of userIds) {
     await exports.sendToUser(userId, payload);
   }
+};
+
+// Fetch all notifications for the logged-in user
+exports.getUserNotifications = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const Notification = require('../models/Notification');
+    const notifications = await Notification.find({ user: userId }).sort({ createdAt: -1 });
+    const unreadCount = await Notification.countDocuments({ user: userId, read: false });
+    res.json({ notifications, unreadCount });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch notifications', error: err.message });
+  }
+};
+
+// Mark notifications as read (all or by ID)
+exports.markAsRead = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const Notification = require('../models/Notification');
+    const { notificationId } = req.body;
+    if (notificationId) {
+      // Mark a specific notification as read
+      await Notification.updateOne({ _id: notificationId, user: userId }, { $set: { read: true } });
+    } else {
+      // Mark all notifications as read
+      await Notification.updateMany({ user: userId, read: false }, { $set: { read: true } });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to mark notifications as read', error: err.message });
+  }
 }; 

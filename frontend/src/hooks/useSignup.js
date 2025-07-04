@@ -6,10 +6,7 @@ export const useSignup = () => {
   const [isLoading, setIsLoading] = useState(null)
 
   
-  // const handleBack = () => {
-  //   // setTitle("Welcome")
-  //   navigate("/login")
-  // }
+  
 
   const signup = async (name, email, password, persist) => {
     setIsLoading(true)

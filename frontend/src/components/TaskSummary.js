@@ -77,11 +77,11 @@ const TaskSummary = ({ tasks }) => {
         
         {taskStats.future > 0 && (
           <div className="col-md-3 col-sm-6">
-            <div className="card border-success bg-success bg-opacity-10">
+            <div className="card border-secondary bg-secondary bg-opacity-10">
               <div className="card-body text-center">
-                <FaCheckCircle className="fs-2 text-success mb-2" />
-                <h6 className="text-success mb-1">Future</h6>
-                <h4 className="text-success mb-0">{taskStats.future}</h4>
+                <FaCalendarAlt className="fs-2 text-secondary mb-2" />
+                <h6 className="text-secondary mb-1">Future</h6>
+                <h4 className="text-secondary mb-0">{taskStats.future}</h4>
               </div>
             </div>
           </div>
@@ -99,7 +99,7 @@ const TaskSummary = ({ tasks }) => {
           </div>
         )}
         
-        {taskStats.noDueDate > 0 && (
+        {/* {taskStats.noDueDate > 0 && (
           <div className="col-md-3 col-sm-6">
             <div className="card border-secondary bg-secondary bg-opacity-10">
               <div className="card-body text-center">
@@ -109,7 +109,7 @@ const TaskSummary = ({ tasks }) => {
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   )

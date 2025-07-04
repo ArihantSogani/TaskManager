@@ -80,7 +80,7 @@ const Note = () => {
   }), [notes, titles, tag])
 
   const handleBack = () => {
-    setTitle("Welcome")
+    setTitle("ComplyRelax")
     navigate("/")
   }
   

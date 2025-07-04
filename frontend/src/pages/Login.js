@@ -1,28 +1,23 @@
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import { useLogin } from '../hooks/useLogin'
 import { Link } from 'react-router-dom'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
-import usePersist from '../hooks/usePersist' 
-import PersistLoginAlert from '../components/auth/PersistLoginAlert'
-import PersistLoginCheckbox from '../components/auth/PersistLoginCheckbox'
+import { Form } from 'react-bootstrap'
 
 const Login = () => {
   const { login, error, isLoading } = useLogin()
-  const { persist, setPersist } = usePersist()
-  const [ changeIcon, setChangeIcon ] = useState(false)
   const emailRef = useRef('')
   const passwordRef = useRef('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    await login(emailRef.current.value.trim(), passwordRef.current.value.trim(), persist)
+    await login(emailRef.current.value.trim(), passwordRef.current.value.trim())
   }
 
   const handleShowPassword =  (e) => {
     e.preventDefault()
     const isPassword = passwordRef.current.type === "password"
     passwordRef.current.type = isPassword ? "text" : "password"
-    setChangeIcon(isPassword)
   }
 
   return (
@@ -33,23 +28,22 @@ const Login = () => {
         <label>Email Address:</label>
         <input className="inputs" type="email" ref={emailRef}/>
 
-        <label>Password:</label>
-        <div className="d-flex">
-          <input className="inputs" type="password" ref={passwordRef} autoComplete="on"/>
-          <button className="btn mb-2" onClick={handleShowPassword}>{changeIcon ? <FaEyeSlash/> : <FaEye/>}</button>
-        </div>
-
-        <div className="d-flex justify-content-between">
-          <PersistLoginCheckbox persist={persist} setPersist={setPersist} />
-        </div>
+        <Form.Group className="mb-3">
+          <Form.Label>Password</Form.Label>
+          <div className="d-flex">
+            <input className="inputs" type="password" ref={passwordRef} autoComplete="on"/>
+            <button className="btn mb-2" onClick={handleShowPassword}>{passwordRef.current.type === "password" ? <FaEyeSlash/> : <FaEye/>}</button>
+          </div>
+          <Form.Text className="text-muted">
+            Password must be at least 8 characters and include at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 symbol.
+          </Form.Text>
+        </Form.Group>
 
         <button className="w-100 mt-3" disabled={isLoading}>Log In</button>
 
         <div className="signup-prompt mt-3">Create an account ? <Link to="/signup">Signup</Link></div>
         {error && <div className="error">{error}</div>}
       </form>
-
-      {persist && (<PersistLoginAlert maxWidth="400px" marginAuto={true}/>)}
     </>
   )
 }

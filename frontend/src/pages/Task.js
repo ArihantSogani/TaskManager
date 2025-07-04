@@ -34,7 +34,7 @@ const Task = () => {
   const color = statusBar[targetUser?.userRoles]
 
   const handleBack = () => {
-    setTitle("Welcome")
+    setTitle("ComplyRelax")
     navigate("/")
   }
 

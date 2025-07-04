@@ -53,7 +53,7 @@ const Add = () => {
   }
 
   const handleBack = () => {
-    setTitle("Welcome")
+    setTitle("ComplyRelax")
     navigate("/")
   }
 
