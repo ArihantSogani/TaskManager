@@ -24,15 +24,22 @@ const Add = ({ task_id, show, setShow }) => {
   const isAdmin = auth?.roles?.includes('Admin') || auth?.roles?.includes('Root');
 
   useEffect(() => {
+    if (!auth?.accessToken) {
+      console.log('No access token, skipping fetch. Auth:', auth);
+      return;
+    }
     if (show) {
       // Fetch unassigned users when modal is shown
       (async () => {
         try {
-          const response = await axiosPrivate.get(`/api/tasks/unassigned/${task_id}`)
+          const response = await axiosPrivate.get(`/api/tasks/unassigned/${task_id}`);
+
+          console.log('Unassigned users response:', response.data);
           setNotAssignedUser(response.data)
           setError(null)
           if (response.data.length === 0) setError('No idle users found')
         } catch (err) {
+          console.error('Error fetching unassigned users:', err);
           setError(err.response?.data?.error || 'Something went wrong')
         }
       })();
@@ -40,7 +47,7 @@ const Add = ({ task_id, show, setShow }) => {
       setNotAssignedUser([])
       setError(null)
     }
-  }, [show, axiosPrivate, task_id])
+  }, [show, axiosPrivate, task_id, auth]);
 
   const handleSubmit = async (e) => {
     e.preventDefault()

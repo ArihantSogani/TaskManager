@@ -7,13 +7,14 @@ import { isPast} from 'date-fns'
 import Edit from './Edit'
 import { AiOutlinePaperClip } from 'react-icons/ai'
 import { useState } from 'react'
+import { Badge, Stack } from "react-bootstrap"
 
 import TaskComments from './TaskComments'
 import { BsThreeDotsVertical } from 'react-icons/bs'
 import { Modal, Button } from 'react-bootstrap'
 import { AiOutlineInfoCircle } from 'react-icons/ai'
 
-const Index = ({ tasks }) => {
+const Index = ({ tasks, allUsers }) => {
   // const { auth } = useAuthContext()
   // const admin = auth.roles.includes(ROLES.Admin) || auth.roles.includes(ROLES.Root)
   const [showFilesModal, setShowFilesModal] = useState(false);
@@ -27,6 +28,11 @@ const Index = ({ tasks }) => {
     setShowFilesModal(false);
     setModalFiles([]);
   };
+  // Build a global user lookup if allUsers is provided
+  const globalUserMap = {};
+  if (allUsers && Array.isArray(allUsers)) {
+    allUsers.forEach(u => { if (u && u._id) globalUserMap[u._id] = u; });
+  }
   return (
     <>
       {tasks.map(task => {
@@ -61,6 +67,13 @@ const Index = ({ tasks }) => {
         const users = {};
         if (task.createdBy) users[task.createdBy._id] = task.createdBy;
         if (task.assignedTo) task.assignedTo.forEach(u => users[u._id] = u);
+        // Add users from activity log if missing
+        if (task.activity && Array.isArray(task.activity)) {
+          task.activity.forEach(act => {
+            if (act.user && !users[act.user] && globalUserMap[act.user]) users[act.user] = globalUserMap[act.user];
+            if (act.to && !users[act.to] && globalUserMap[act.to]) users[act.to] = globalUserMap[act.to];
+          });
+        }
         return (
           <div
             className="task-card mb-4"
@@ -94,6 +107,15 @@ const Index = ({ tasks }) => {
               </div>
             </div>
             <div className="px-4 pb-2" style={{color: '#555', fontSize: '1em'}}>{task.description}</div>
+            {task.labels && task.labels.length > 0 && (
+              <div className="px-4 pb-2">
+                <Stack gap={1} direction="horizontal" className="flex-wrap">
+                  {task.labels.map((label, index) => (
+                    <Badge key={index} className="text-truncate" style={{background: '#6c757d', color: '#fff'}}>{label}</Badge>
+                  ))}
+                </Stack>
+              </div>
+            )}
             <div className="px-4 pb-2" style={{fontSize: '1em'}}>
               {task.createdBy && (
                 <span style={{fontSize: '1em', color: '#444'}}>

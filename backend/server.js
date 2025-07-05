@@ -93,11 +93,11 @@ io.on('connection', (socket) => {
   })
 })
 
-// ✅ Error Handling
+//  Error Handling
 app.use(notFound)
 app.use(errorHandler)
 
-// ✅ Start Server
+//  Start Server
 mongoose.connection.once('open', () => {
   console.log('Database Connected Successfully!')
   server.listen(process.env.PORT || 4000, () => {

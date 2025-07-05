@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { ROLES } from '../../config/roles'
 import { BsPencilSquare } from 'react-icons/bs'
 import { Alert, Button, Form, Modal } from 'react-bootstrap'
@@ -8,6 +8,7 @@ import useAxiosPrivate from '../../hooks/useAxiosPrivate'
 import { AiOutlineUsergroupAdd } from 'react-icons/ai'
 import AssignAdd from './assign/Add'
 import { useNavigate } from 'react-router-dom'
+import CreatableReactSelect from "react-select/creatable"
 const validator = require('validator')
 
 const Edit = ({ task, forceShow, setForceShow }) => {
@@ -17,6 +18,8 @@ const Edit = ({ task, forceShow, setForceShow }) => {
   const [error, setError] = useState(null)
   const [show, setShow] = useState(false)
   const [showAssign, setShowAssign] = useState(false)
+  const [labels, setLabels] = useState(task.labels ? task.labels.map(label => ({ value: label, label: label })) : [])
+  const [availableLabels, setAvailableLabels] = useState([])
   const titleRef = useRef('')
   const descriptionRef = useRef('')
   const statusRef = useRef('')
@@ -26,6 +29,22 @@ const Edit = ({ task, forceShow, setForceShow }) => {
 
   const isAdmin = auth.roles.includes(ROLES.Admin) || auth.roles.includes(ROLES.Root)
   const isAssignedUser = task.assignedTo.some(user => user._id === auth._id)
+
+  // Fetch available labels when modal opens
+  useEffect(() => {
+    const fetchLabels = async () => {
+      try {
+        const response = await axiosPrivate.get('/api/tasks/labels')
+        setAvailableLabels(response.data)
+      } catch (err) {
+        console.error('Error fetching labels:', err)
+      }
+    }
+    
+    if (modalShow && isAdmin) {
+      fetchLabels()
+    }
+  }, [modalShow, isAdmin, axiosPrivate])
 
   // Debug logs
   console.log('Current user:', auth)
@@ -38,7 +57,8 @@ const Edit = ({ task, forceShow, setForceShow }) => {
       updateTask = {
         title: titleRef.current.value,
         description: descriptionRef.current.value,
-        status: statusRef.current.value
+        status: statusRef.current.value,
+        labels: labels.map(l => l.value)
       }
     } else if (isAssignedUser) {
       updateTask = { status: statusRef.current.value }
@@ -128,6 +148,18 @@ const Edit = ({ task, forceShow, setForceShow }) => {
               <Form.Group className="mb-3">
                 <Form.Label>Description:</Form.Label>
                 <Form.Control as="textarea" rows={3} defaultValue={task.description} ref={descriptionRef}/>
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Labels:</Form.Label>
+                <CreatableReactSelect 
+                  isMulti 
+                  value={labels}
+                  onChange={setLabels}
+                  options={availableLabels}
+                  placeholder="Add Labels..."
+                  noOptionsMessage={() => "Type to create new label..."}
+                  formatCreateLabel={(inputValue) => `Create "${inputValue}"`}
+                />
               </Form.Group>
             </>
           )}

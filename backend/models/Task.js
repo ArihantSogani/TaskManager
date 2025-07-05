@@ -79,6 +79,10 @@ const taskSchema = new mongoose.Schema(
                 mimetype: String
             }
         ],
+        labels: {
+            type: [String],
+            default: []
+        },
         activity: [
             {
                 type: { type: String, enum: ['assigned', 'status'], required: true },

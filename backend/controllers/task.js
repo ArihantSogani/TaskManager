@@ -5,6 +5,7 @@ const { CustomError } = require('../middleware/errorHandler')
 const { validateAuthInputField, validateObjectId } = require('../utils/validation')
 const notificationService = require('../services/notificationService')
 const notificationController = require('./notification')
+
 // const pushNotificationService = require('../services/pushNotificationService')
 
 exports.getAll = async (req, res, next) => {
@@ -23,7 +24,12 @@ exports.getAll = async (req, res, next) => {
   
     const task = {
       Root: await Task.find().sort({ createdAt: -1 }).populate('createdBy', 'name').populate('assignedTo', 'name').populate('comments.user', 'name').lean(),
-      Admin: await Task.find({ createdBy: userId }).populate('createdBy', 'name').populate('assignedTo', 'name').populate('comments.user', 'name').sort({ createdAt: -1 }).lean(),
+      Admin: await Task.find({ $or: [{ createdBy: userId }, { assignedTo: userId }] })
+        .populate('createdBy', 'name')
+        .populate('assignedTo', 'name')
+        .populate('comments.user', 'name')
+        .sort({ createdAt: -1 })
+        .lean(),
       User: await Task.find({ assignedTo: userId }).populate('createdBy', 'name').populate('assignedTo', 'name').populate('comments.user', 'name').sort({ createdAt: -1 }).lean()
     }
   
@@ -73,8 +79,17 @@ exports.create = async (req, res, next) => {
     console.log('--- CREATE TASK CONTROLLER CALLED ---');
     console.log('BODY:', req.body);
     console.log('FILES:', req.files);
-    let { title, description, priority, dueDate, assignedTo } = req.body;
-    // If assignedTo is a string (from form-data), convert to array
+    let { title, description, priority, dueDate, assignedTo, labels } = req.body;
+    // Parse labels if sent as JSON string
+    if (typeof labels === 'string') {
+      try {
+        labels = JSON.parse(labels);
+      } catch {
+        labels = [labels];
+      }
+    }
+    if (!Array.isArray(labels)) labels = [];
+
     if (typeof assignedTo === 'string') assignedTo = [assignedTo];
     if (Array.isArray(assignedTo)) {
       assignedTo = assignedTo.filter(Boolean);
@@ -83,7 +98,6 @@ exports.create = async (req, res, next) => {
     }
 
     validateAuthInputField({ title, description });
-  
     const adminId = req.user._id;
 
     // Handle file attachments
@@ -96,6 +110,9 @@ exports.create = async (req, res, next) => {
       }));
     }
 
+    // Debug log for labels
+    console.log('Labels to be saved in task:', labels);
+
     const task = await Task.create({
       title,
       description,
@@ -103,6 +120,7 @@ exports.create = async (req, res, next) => {
       assignedTo: assignedTo || [],
       priority: priority || 'Medium',
       dueDate: dueDate || null,
+      labels: labels || [],
       attachments
     });
     if (!task) throw new CustomError('Something went wrong, during creating new task', 400);
@@ -113,7 +131,6 @@ exports.create = async (req, res, next) => {
         message: `You have been assigned to task "${task.title}"`,
         taskId: task._id
       }
-      
       await Promise.all(assignedTo.map(userId => 
         notificationService.sendNotification(userId, notification)
       ))
@@ -165,6 +182,11 @@ exports.update = async (req, res, next) => {
     // If it's a status update, validate the status
     if (status && !['Pending', 'In Progress', 'Completed', 'On Hold'].includes(status)) {
       throw new CustomError('Invalid status value', 400)
+    }
+
+    // Log label updates for debugging
+    if (req.body.labels && Array.isArray(req.body.labels)) {
+      console.log('Updating labels in task:', req.body.labels)
     }
 
     // Update the task
@@ -287,8 +309,12 @@ exports.assignUser = async (req, res, next) => {
     if (!task) throw new CustomError('Task not found', 404)
 
     // Allow current assignee or admin/root
-    const isCurrentAssignee = task.assignedTo.some(u => u.toString() === ownerId.toString());
+    console.log('assignedTo:', task.assignedTo, 'ownerId:', ownerId);
+    const isCurrentAssignee = task.assignedTo.some(u =>
+      (u._id ? u._id.toString() : u.toString()) === ownerId.toString()
+    );
     const isAdmin = req.roles && (req.roles.includes('Admin') || req.roles.includes('Root'));
+    console.log('isCurrentAssignee:', isCurrentAssignee, 'isAdmin:', isAdmin);
     if (!isCurrentAssignee && !isAdmin) throw new CustomError('Only the current assignee or an admin can reassign this task', 401)
 
     let prevAssigneeUser = null;
@@ -296,9 +322,17 @@ exports.assignUser = async (req, res, next) => {
 
     if (isAdmin) {
       // Admin: assign to any set of users
+      const prevAssignees = Array.isArray(task.assignedTo) ? task.assignedTo.map(u => u.toString()) : [];
       task.assignedTo = user_id;
+      // Log activity for admin assignment/reassignment
+      task.activity.push({
+        type: 'assigned',
+        user: ownerId,
+        to: user_id,
+        timestamp: new Date(),
+        details: `Admin reassigned task from: ${prevAssignees.join(', ')} to: ${user_id.join(', ')}`
+      });
       await task.save();
-      // Log activity for each new assignment (optional: can be improved)
       prevAssigneeUser = null;
       newAssigneeUser = null;
     } else {
@@ -473,7 +507,7 @@ exports.markNotificationRead = async (req, res, next) => {
 
 exports.getUnassignedUsers = async (req, res, next) => {
   try {
-    const { taskId } = req.params
+    const taskId = req.params.taskId;
   
     validateObjectId(taskId, 'Task')
   
@@ -482,8 +516,12 @@ exports.getUnassignedUsers = async (req, res, next) => {
 
     // Allow current assignee or admin/root
     const ownerId = req.user._id;
-    const isCurrentAssignee = task.assignedTo.length === 1 && task.assignedTo[0].toString() === ownerId.toString();
+    console.log('assignedTo:', task.assignedTo, 'ownerId:', ownerId);
+    const isCurrentAssignee = task.assignedTo.some(u =>
+      (u._id ? u._id.toString() : u.toString()) === ownerId.toString()
+    );
     const isAdmin = req.roles && (req.roles.includes('Admin') || req.roles.includes('Root'));
+    console.log('isCurrentAssignee:', isCurrentAssignee, 'isAdmin:', isAdmin);
     if (!isCurrentAssignee && !isAdmin) throw new CustomError('Only the current assignee or an admin can reassign this task', 401)
 
     // Allow all active users (including Admins) except those already assigned
@@ -496,6 +534,37 @@ exports.getUnassignedUsers = async (req, res, next) => {
     
     res.status(200).json(unassignedUsers)
   } catch (error) {
+    next(error)
+  }
+}
+
+// Get all unique labels from existing tasks
+exports.getAllLabels = async (req, res, next) => {
+  try {
+    console.log('Fetching all unique labels from tasks...')
+    
+    // Get all tasks and extract unique labels
+    const tasks = await Task.find({}, 'labels').lean()
+    const allLabels = tasks.reduce((acc, task) => {
+      if (task.labels && Array.isArray(task.labels)) {
+        acc.push(...task.labels)
+      }
+      return acc
+    }, [])
+    
+    // Remove duplicates and sort
+    const uniqueLabels = [...new Set(allLabels)].sort()
+    console.log('Found unique labels:', uniqueLabels)
+    
+    const labelOptions = uniqueLabels.map(label => ({
+      value: label,
+      label: label
+    }))
+    
+    console.log('Sending label options:', labelOptions)
+    res.status(200).json(labelOptions)
+  } catch (error) {
+    console.error('Error fetching labels:', error)
     next(error)
   }
 }

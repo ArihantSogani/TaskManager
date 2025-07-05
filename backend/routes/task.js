@@ -33,6 +33,10 @@ const upload = multer({
 router.route('/')
   .get(requireRoles([...Object.values(ROLES_LIST)]), tasksController.getAll)
 
+// Get all unique labels
+router.route('/labels')
+  .get(requireRoles([...Object.values(ROLES_LIST)]), tasksController.getAllLabels)
+
 // Get notifications for the authenticated user
 router.route('/notifications')
   .get(requireRoles([...Object.values(ROLES_LIST)]), tasksController.getNotifications)
@@ -49,6 +53,14 @@ router.route('/:id/comments')
 router.route('/:id')
   .patch(requireRoles([...Object.values(ROLES_LIST)]), tasksController.update)
 
+// Get unassigned users (accessible to all authenticated users)
+router.route('/unassigned/:taskId')
+  .get(requireRoles([...Object.values(ROLES_LIST)]), tasksController.getUnassignedUsers)
+
+// Assign users (accessible to all authenticated users)
+router.route('/assign')
+  .post(requireRoles([...Object.values(ROLES_LIST)]), tasksController.assignUser)
+
 // Admin and Root only routes
 router.use(requireRoles([ROLES_LIST.Root, ROLES_LIST.Admin]))
 
@@ -59,15 +71,9 @@ router.route('/:id')
   .get(tasksController.getById)
   .delete(tasksController.delete)
 
-router.route('/assign')
-  .post(tasksController.assignUser)
-
 router.route('/assign/:id')
   .get(tasksController.getAssignUser)
   .delete(tasksController.deleteAssign)
-
-router.route('/unassigned/:taskId')
-  .get(tasksController.getUnassignedUsers)
 
 router.route('/inspect')
   .post(tasksController.inspect)

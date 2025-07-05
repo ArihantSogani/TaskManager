@@ -1,6 +1,6 @@
 import Delete from './Delete'
 import View from './View'
-import Edit from './Edit'
+// import Edit from './Edit'
 import { ROLES } from '../../config/roles'
 import { MdOutlineWifi, MdOutlineWifiOff  } from 'react-icons/md'
 import formatDistanceToNow from 'date-fns/formatDistanceToNow'
@@ -15,26 +15,31 @@ const Index = ({ filteredNames }) => {
 
   return (
     <>
-      {filteredNames.map((user, index)=> (
-        <tr key={index}>
-          <td>{index + 1 + '.'}</td>
-          <td>{user.name}</td>
-          <td>{user.email}</td>
-          <td>{user.roles}</td>
-          <td>
-            <div className="form-check form-switch">
-              <input className="form-check-input" type="checkbox" role="switch" checked={user.active} readOnly/>
-            </div>
-          </td>
-          <td>{user.isOnline ? <MdOutlineWifi className='text-success' size={25}/> : <MdOutlineWifiOff className='text-secondary' size={25}/>}</td>
-          <td>{formatDistanceToNow(new Date(user.lastActive), { addSuffix: true })}</td>
-          <td>
-            <View user={user}/>
-            <Edit user={user}/>
-            {permitDeleteUser(auth, user) && (<Delete user={ user }/>)}
-          </td>
-        </tr>
-      ))}
+      {filteredNames.map((user, index)=> {
+        console.log('User:', user.name, 'Roles:', user.roles, 'Type:', typeof user.roles);
+        // const isAdmin = Array.isArray(user.roles) ? user.roles.includes('Admin') : user.roles === 'Admin';
+        return (
+          <tr key={index}>
+            <td>{index + 1 + '.'}</td>
+            <td>{user.name}</td>
+            <td>{user.email}</td>
+            <td>{user.roles}</td>
+            <td>
+              <div className="form-check form-switch">
+                <input className="form-check-input" type="checkbox" role="switch" checked={user.active} readOnly/>
+              </div>
+            </td>
+            <td>{user.isOnline ? <MdOutlineWifi className='text-success' size={25}/> : <MdOutlineWifiOff className='text-secondary' size={25}/>}</td>
+            <td>{formatDistanceToNow(new Date(user.lastActive), { addSuffix: true })}</td>
+            <td>
+              <View user={user}/>
+              <span style={{ marginLeft: '8px' }}>
+                {permitDeleteUser(auth, user) && (<Delete user={ user }/>) }
+              </span>
+            </td>
+          </tr>
+        )
+      })}
     </>
   )
 }

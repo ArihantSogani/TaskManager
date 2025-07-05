@@ -1,13 +1,13 @@
 import { useEffect, useState, useRef } from 'react';
 import useAxiosPrivate from '../../hooks/useAxiosPrivate';
-import { useAuthContext } from '../../context/auth';
+// import { useAuthContext } from '../../context/auth';
 import { socket } from '../../socket';
 import { Modal, Button } from 'react-bootstrap';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 
 const TaskComments = ({ task }) => {
   const axiosPrivate = useAxiosPrivate();
-  const { auth } = useAuthContext();
+  // const { auth } = useAuthContext();
   const [comments, setComments] = useState(task.comments || []);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);

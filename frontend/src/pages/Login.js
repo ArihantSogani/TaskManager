@@ -32,7 +32,7 @@ const Login = () => {
           <Form.Label>Password</Form.Label>
           <div className="d-flex">
             <input className="inputs" type="password" ref={passwordRef} autoComplete="on"/>
-            <button className="btn mb-2" onClick={handleShowPassword}>{passwordRef.current.type === "password" ? <FaEyeSlash/> : <FaEye/>}</button>
+            <button type="button" className="btn mb-2" onClick={handleShowPassword}>{passwordRef.current.type === "password" ? <FaEyeSlash/> : <FaEye/>}</button>
           </div>
           <Form.Text className="text-muted">
             Password must be at least 8 characters and include at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 symbol.

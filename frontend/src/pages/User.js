@@ -6,8 +6,8 @@ import { useUserContext } from '../context/user'
 import { usePathContext } from '../context/path'
 import useAxiosPrivate from '../hooks/useAxiosPrivate'
 import Details from '../components/users/Index'
-import Add from '../components/users/Add'
 import { socket } from '../socket'
+import { BiArrowBack } from 'react-icons/bi'
 
 const User = () => {
   const { auth } = useAuthContext()
@@ -65,12 +65,15 @@ const User = () => {
 
   const filteredNames = useMemo(() => users?.filter(user => user.name.toLowerCase().includes(query.toLowerCase())), [users, query])
 
+  // Debug logs
+  console.log('All users from context:', users);
+  console.log('Filtered names for table:', filteredNames);
+
   return (
     <>
       {admin && (
         <>
-          <Add />
-          
+          <button className="btn btn-outline-primary mb-2" onClick={() => { setTitle('ComplyRelax'); window.history.back(); }}><BiArrowBack /></button>
           <div className="input-group mt-2 mb-3">
             <input type="search" className="form-control" placeholder="Search..." value={query} onChange={e => setQuery(e.target.value)}/>
             <button className="btn btn-outline-primary" type="button"><GoSearch/></button>

@@ -8,6 +8,7 @@ import { BiArrowBack } from 'react-icons/bi'
 import { BsPlusLg } from 'react-icons/bs'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate'
 import { AiOutlineClose } from 'react-icons/ai'
+import CreatableReactSelect from "react-select/creatable"
 
 const Add = () => {
   const navigate = useNavigate()
@@ -21,25 +22,35 @@ const Add = () => {
   const [selectedUsers, setSelectedUsers] = useState([])
   const [files, setFiles] = useState([])
   const [showFilesModal, setShowFilesModal] = useState(false)
+  const [labels, setLabels] = useState([])
+  const [availableLabels, setAvailableLabels] = useState([])
   const fileInputRef = useRef(null)
   const titleRef = useRef('')
   const descriptionRef = useRef('')
   const priorityRef = useRef('Medium')
   const dueDateRef = useRef('')
 
-  // Fetch all users for assignment
+  // Fetch all users for assignment and labels
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axiosPrivate.get('/api/users')
-        setUsers(response.data)
+        // Fetch users if admin
+        if (auth?.roles?.includes('Admin')) {
+          const usersResponse = await axiosPrivate.get('/api/users')
+          setUsers(usersResponse.data)
+        }
+        
+        // Fetch available labels
+        const labelsResponse = await axiosPrivate.get('/api/tasks/labels')
+        console.log('Fetched labels:', labelsResponse.data)
+        setAvailableLabels(labelsResponse.data)
       } catch (err) {
-        console.error('Error fetching users:', err)
+        console.error('Error fetching data:', err)
       }
     }
     
-    if (show && auth?.roles?.includes('Admin')) {
-      fetchUsers()
+    if (show) {
+      fetchData()
     }
   }, [show, auth, axiosPrivate])
 
@@ -89,6 +100,10 @@ const Add = () => {
     formData.append('dueDate', dueDateRef.current.value || '')
     selectedUsers.forEach(userId => formData.append('assignedTo', userId))
     files.forEach(file => formData.append('files', file))
+    
+    // Add labels to form data
+    const labelValues = labels.map(l => l.value)
+    formData.append('labels', JSON.stringify(labelValues))
     try {
       const response = await axiosPrivate.post('/api/tasks', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -98,6 +113,7 @@ const Add = () => {
       setShow(false)
       setSelectedUsers([])
       setFiles([])
+      setLabels([])
       // Clear form
       titleRef.current.value = ''
       descriptionRef.current.value = ''
@@ -145,6 +161,18 @@ const Add = () => {
           <Form.Group className="mb-3">
             <Form.Label>Due Date:</Form.Label>
             <Form.Control type="date" ref={dueDateRef}/>
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Labels:</Form.Label>
+            <CreatableReactSelect 
+              isMulti 
+              value={labels}
+              onChange={setLabels}
+              options={availableLabels}
+              placeholder="Add Labels..."
+              noOptionsMessage={() => "Type to create new label..."}
+              formatCreateLabel={(inputValue) => `Create "${inputValue}"`}
+            />
           </Form.Group>
           {auth?.roles?.includes('Admin') && (
             <Form.Group className="mb-3">
