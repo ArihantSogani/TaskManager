@@ -3,7 +3,7 @@ import { BiTimer } from 'react-icons/bi'
 // import { ROLES } from '../../config/roles'
 // import { useAuthContext } from '../../context/auth'
 import formatDistanceToNow from 'date-fns/formatDistanceToNow'
-import { isPast} from 'date-fns'
+// import { isPast} from 'date-fns'
 import Edit from './Edit'
 import { AiOutlinePaperClip } from 'react-icons/ai'
 import { useState } from 'react'
@@ -13,6 +13,7 @@ import TaskComments from './TaskComments'
 import { BsThreeDotsVertical } from 'react-icons/bs'
 import { Modal, Button } from 'react-bootstrap'
 import { AiOutlineInfoCircle } from 'react-icons/ai'
+import { getTaskCategory } from '../../utils/taskDateCategory'
 
 const Index = ({ tasks, allUsers }) => {
   // const { auth } = useAuthContext()
@@ -74,6 +75,7 @@ const Index = ({ tasks, allUsers }) => {
             if (act.to && !users[act.to] && globalUserMap[act.to]) users[act.to] = globalUserMap[act.to];
           });
         }
+        const category = getTaskCategory(task);
         return (
           <div
             className="task-card mb-4"
@@ -134,9 +136,15 @@ const Index = ({ tasks, allUsers }) => {
             <div className="d-flex align-items-center flex-wrap gap-4 px-4 pb-3" style={{fontSize: '0.97em', color: '#666', borderTop: '1px solid #eee', paddingTop: 10}}>
               {task.status === 'Completed' && task.completedAt ? (
                 <span><BsCalendarWeek className="fs-6"/> <b>Completed On:</b> {new Date(task.completedAt).toLocaleDateString('en-GB')}</span>
-                    ) : task.dueDate && (
-                <span style={{color: isPast(new Date(task.dueDate)) ? 'var(--danger)' : undefined}}><BsCalendarWeek className="fs-6"/> <b>Due:</b> {new Date(task.dueDate).toLocaleDateString('en-GB')} {isPast(new Date(task.dueDate)) && <span style={{color:'var(--danger)', fontWeight:600}}>(Overdue!)</span>}</span>
-                    )}
+              ) : task.dueDate && (
+                <span>
+                  <BsCalendarWeek className="fs-6"/> <b>Due:</b> {new Date(task.dueDate).toLocaleDateString('en-GB')}
+                  {category === 'overdue' && <span style={{color:'var(--danger)', fontWeight:600}}>(Overdue!)</span>}
+                  {category === 'urgent' && <span style={{color:'var(--warning)', fontWeight:600}}>(Due Today)</span>}
+                  {category === 'upcoming' && <span style={{color:'var(--info)', fontWeight:600}}>(This Week)</span>}
+                  {category === 'future' && <span style={{color:'var(--secondary)', fontWeight:600}}>(Future)</span>}
+                </span>
+              )}
               <span><BiTimer className="fs-5"/> <b>Last updated:</b> {formatDistanceToNow(new Date(task.updatedAt), { addSuffix: true })}</span>
                     {task.attachments && task.attachments.length > 0 && (
                 <span><AiOutlinePaperClip />{' '}

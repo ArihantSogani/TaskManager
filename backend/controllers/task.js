@@ -5,6 +5,7 @@ const { CustomError } = require('../middleware/errorHandler')
 const { validateAuthInputField, validateObjectId } = require('../utils/validation')
 const notificationService = require('../services/notificationService')
 const notificationController = require('./notification')
+const { io } = require('../server')
 
 // const pushNotificationService = require('../services/pushNotificationService')
 
@@ -266,6 +267,15 @@ exports.update = async (req, res, next) => {
       ))
     }
   
+    // Notify all relevant users (assigned, creator, etc.)
+    const notifyUsers = [
+      ...(updatedTask.assignedTo?.map(u => u._id?.toString() || u.toString()) || []),
+      updatedTask.createdBy?._id?.toString() || updatedTask.createdBy?.toString()
+    ].filter(Boolean);
+    notifyUsers.forEach(userId => {
+      io.to(userId).emit('task-updated', updatedTask);
+    });
+  
     res.status(200).json(updatedTask)
   } catch (error) {
     next(error)
@@ -297,6 +307,15 @@ exports.delete = async (req, res, next) => {
     await Promise.all(task.assignedTo.map(userId => 
       notificationService.sendNotification(userId, notification)
     ))
+  
+    // Notify all relevant users (assigned, creator, etc.)
+    const notifyUsersDelete = [
+      ...(task.assignedTo?.map(u => u._id?.toString() || u.toString()) || []),
+      task.createdBy?._id?.toString() || task.createdBy?.toString()
+    ].filter(Boolean);
+    notifyUsersDelete.forEach(userId => {
+      io.to(userId).emit('task-deleted', task._id.toString());
+    });
   
     res.status(200).json({ message: 'Task deleted successfully' })
   } catch (error) {
@@ -391,6 +410,15 @@ exports.assignUser = async (req, res, next) => {
       .populate('createdBy', 'name')
       .lean()
     
+    // Notify all relevant users (assigned, creator, etc.)
+    const notifyUsersAssign = [
+      ...(updatedTask.assignedTo?.map(u => u._id?.toString() || u.toString()) || []),
+      updatedTask.createdBy?._id?.toString() || updatedTask.createdBy?.toString()
+    ].filter(Boolean);
+    notifyUsersAssign.forEach(userId => {
+      io.to(userId).emit('task-updated', updatedTask);
+    });
+    
     res.status(200).json(updatedTask)
   } catch (error) {
     next(error)
@@ -473,6 +501,15 @@ exports.addComment = async (req, res, next) => {
       .populate('assignedTo', 'name')
       .populate('createdBy', 'name')
       .lean()
+
+    // Emit socket event for real-time update
+    const notifyUsersSocket = [
+      ...(updatedTask.assignedTo?.map(u => u._id?.toString() || u.toString()) || []),
+      updatedTask.createdBy?._id?.toString() || updatedTask.createdBy?.toString()
+    ].filter(Boolean);
+    notifyUsersSocket.forEach(userId => {
+      io.to(userId).emit('task-updated', updatedTask);
+    });
 
     res.status(200).json(updatedTask)
   } catch (error) {

@@ -36,6 +36,7 @@ const io = socketIo(server,{
     credentials: true, // Allow cookies to be sent with requests
   },
 })
+module.exports.io = io; // <-- export io instance
 // ✅ Initialize DB
 mongoose.set('strictQuery', false)
 connectDB()

@@ -13,6 +13,7 @@ import Details from '../components/tasks/Index'
 import Add from '../components/tasks/Add'
 import TaskSummary from '../components/TaskSummary'
 import TaskFilter from '../components/TaskFilter'
+import { getTaskCategory } from '../utils/taskDateCategory'
 
 const Task = () => {
   const navigate = useNavigate()
@@ -41,24 +42,19 @@ const Task = () => {
   // Filter tasks based on due date and status
   const filteredTasks = useMemo(() => {
     if (!tasks) return []
-    const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)
-    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
-
     switch (filter) {
       case 'completed':
         return tasks.filter(task => task.status === 'Completed')
       case 'all':
         return tasks.filter(task => task.status !== 'Completed')
       case 'overdue':
-        return tasks.filter(task => task.status !== 'Completed' && task.dueDate && new Date(task.dueDate) < now)
+        return tasks.filter(task => getTaskCategory(task) === 'overdue')
       case 'urgent':
-        return tasks.filter(task => task.status !== 'Completed' && task.dueDate && new Date(task.dueDate) >= now && new Date(task.dueDate) < tomorrow)
+        return tasks.filter(task => getTaskCategory(task) === 'urgent')
       case 'upcoming':
-        return tasks.filter(task => task.status !== 'Completed' && task.dueDate && new Date(task.dueDate) >= tomorrow && new Date(task.dueDate) < nextWeek)
+        return tasks.filter(task => getTaskCategory(task) === 'upcoming')
       case 'future':
-        return tasks.filter(task => task.status !== 'Completed' && task.dueDate && new Date(task.dueDate) >= nextWeek)
+        return tasks.filter(task => getTaskCategory(task) === 'future')
       default:
         return tasks.filter(task => task.status !== 'Completed')
     }

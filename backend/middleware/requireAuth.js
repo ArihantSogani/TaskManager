@@ -4,7 +4,7 @@ const { CustomError } = require('./errorHandler')
 
 const requireAuth = async (req, res, next) => {
   try {
-    console.log('requireAuth middleware called for:', req.originalUrl);
+    // console.log('requireAuth middleware called for:', req.originalUrl);
     const { authorization } = req.headers
     console.log('Authorization header:', authorization);
   
@@ -37,7 +37,7 @@ const requireAuth = async (req, res, next) => {
 
     req.user = { _id: checkActive._id }
     req.roles = checkActive.roles
-    console.log('requireAuth set req.user:', req.user, 'req.roles:', req.roles);
+    // console.log('requireAuth set req.user:', req.user, 'req.roles:', req.roles);
 
     if (!req.user._id) throw new CustomError('Unauthorized User ID', 401)
     if(!req.roles) throw new CustomError('Unauthorized Roles', 401)

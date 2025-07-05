@@ -42,13 +42,17 @@ const User = () => {
       getAllUser()
     }
 
-    socket.emit('online', auth._id)
+    // Ensure socket is connected before emitting online event
+    if (socket.connected) {
+      socket.emit('online', auth._id)
+    } else {
+      socket.on('connect', () => {
+        socket.emit('online', auth._id)
+      })
+    }
     
-    socket.on('rootUpdateUserList', (user) => {
-      dispatch({type: 'SET_USER', payload: user})
-    })
-
     socket.on('adminUpdateUserList', (user) => {
+      console.log('Received adminUpdateUserList event:', user)
       dispatch({type: 'SET_USER', payload: user})
     })
 
@@ -59,6 +63,8 @@ const User = () => {
     return () => {
       isMounted = false
       socket.off('adminUpdateUserList')
+      socket.off('rootUpdateUserList')
+      socket.off('connect')
       abortController.abort()
     }
   },[ auth, dispatch, axiosPrivate, setTitle ])

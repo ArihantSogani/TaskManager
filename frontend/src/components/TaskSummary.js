@@ -1,36 +1,16 @@
 import React from 'react'
 import { FaClock, FaExclamationTriangle, FaCheckCircle, FaCalendarAlt } from 'react-icons/fa'
+import { getTaskCategory } from '../utils/taskDateCategory'
 
 const TaskSummary = ({ tasks }) => {
   const now = new Date()
   
   const taskStats = tasks.reduce((stats, task) => {
-    // Skip completed tasks for overdue/urgent/upcoming counts
-    if (task.status === 'Completed') {
-      stats.completed++
-      return stats
-    }
-
-    if (!task.dueDate) {
-      stats.noDueDate++
-      return stats
-    }
-    
-    const dueDate = new Date(task.dueDate)
-    const diff = dueDate - now
-    
-    if (diff <= 0) {
-      stats.overdue++
-    } else if (diff <= 24 * 60 * 60 * 1000) { // Within 24 hours
-      stats.urgent++
-    } else if (diff <= 7 * 24 * 60 * 60 * 1000) { // Within 7 days
-      stats.upcoming++
-    } else {
-      stats.future++
-    }
-    
-    return stats
-  }, { overdue: 0, urgent: 0, upcoming: 0, future: 0, noDueDate: 0, completed: 0 })
+    const cat = getTaskCategory(task, now);
+    if (cat) stats[cat]++;
+    if (task.status === 'Completed') stats.completed++;
+    return stats;
+  }, { overdue: 0, urgent: 0, upcoming: 0, future: 0, completed: 0 });
 
   return (
     <div className="task-summary mb-4">

@@ -22,13 +22,17 @@ const setupSocket = (io) => {
     const adminSession = userSessions.get('admin')
     const rootSession = userSessions.get('root')
 
+    // console.log('Updating user lists - Admin session:', adminSession, 'Root session:', rootSession)
+
     if (adminSession) {
       const users = await getUsersForAdmin(adminSession.id)
+      // console.log('Emitting adminUpdateUserList to admin:', adminSession.socketId, 'Users count:', users.length)
       io.to(adminSession.socketId).emit('adminUpdateUserList', users)
     }
 
     if (rootSession) {
       const users = await User.find().sort({ isOnline: -1, lastActive: -1 }).select('-password -otp').lean()
+      // console.log('Emitting adminUpdateUserList to root:', rootSession.socketId, 'Users count:', users.length)
       io.to(rootSession.socketId).emit('adminUpdateUserList', users)
     }
   }
@@ -71,6 +75,18 @@ const setupSocket = (io) => {
     socket.on('disconnect', async () => {
       console.log('User disconnected:', socket.userId)
       if (socket.userId) {
+        // Remove user from sessions map
+        const user = await User.findById(socket.userId).select('_id roles').lean().exec()
+        if (user) {
+          if (user.roles.includes(ROLES_LIST.Admin)) {
+            userSessions.delete('admin')
+            console.log('Admin session removed from map')
+          }
+          if (user.roles.includes(ROLES_LIST.Root)) {
+            userSessions.delete('root')
+            console.log('Root session removed from map')
+          }
+        }
         await updateUserStatus(socket.userId, false)
       }
     })
