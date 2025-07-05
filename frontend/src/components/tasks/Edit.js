@@ -7,7 +7,6 @@ import { useAuthContext } from '../../context/auth'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate'
 import { AiOutlineUsergroupAdd } from 'react-icons/ai'
 import AssignAdd from './assign/Add'
-import { useNavigate } from 'react-router-dom'
 import CreatableReactSelect from "react-select/creatable"
 const validator = require('validator')
 
@@ -25,8 +24,6 @@ const Edit = ({ task, forceShow, setForceShow }) => {
   const statusRef = useRef('')
   const modalShow = typeof forceShow === 'boolean' ? forceShow : show;
   const modalSetShow = setForceShow || setShow;
-  const navigate = useNavigate();
-
   const isAdmin = auth.roles.includes(ROLES.Admin) || auth.roles.includes(ROLES.Root)
   const isAssignedUser = task.assignedTo.some(user => user._id === auth._id)
 
@@ -34,7 +31,7 @@ const Edit = ({ task, forceShow, setForceShow }) => {
   useEffect(() => {
     const fetchLabels = async () => {
       try {
-        const response = await axiosPrivate.get('/api/tasks/labels')
+        const response = await axiosPrivate.get('/api/labels')
         setAvailableLabels(response.data)
       } catch (err) {
         console.error('Error fetching labels:', err)

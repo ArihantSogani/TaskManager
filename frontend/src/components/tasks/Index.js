@@ -229,13 +229,13 @@ function ActivityModal({ show, onHide, activity, users }) {
                 <div style={{ fontSize: '0.97em', color: '#444' }}>
                   {act.type === 'assigned' && (
                     <>
-                      <span>By: <b>{users[act.user]?.name || act.user}</b></span>
-                      {act.to && <span> &rarr; <b>{users[act.to]?.name || act.to}</b></span>}
+                      <span>By: <b>{act.user?.name || users[act.user]?.name || act.user || 'Unknown'}</b></span>
+                      {act.to && <span> &rarr; <b>{act.to?.name || users[act.to]?.name || act.to || 'Unknown'}</b></span>}
                     </>
                   )}
                   {act.type === 'status' && (
                     <>
-                      <span>By: <b>{users[act.user]?.name || act.user}</b></span>
+                      <span>By: <b>{act.user?.name || users[act.user]?.name || act.user || 'Unknown'}</b></span>
                       <span> &mdash; Status: <b>{act.status}</b></span>
                     </>
                   )}

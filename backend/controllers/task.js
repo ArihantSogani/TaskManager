@@ -23,14 +23,29 @@ exports.getAll = async (req, res, next) => {
     }
   
     const task = {
-      Root: await Task.find().sort({ createdAt: -1 }).populate('createdBy', 'name').populate('assignedTo', 'name').populate('comments.user', 'name').lean(),
+      Root: await Task.find().sort({ createdAt: -1 })
+        .populate('createdBy', 'name')
+        .populate('assignedTo', 'name')
+        .populate('comments.user', 'name')
+        .populate('activity.user', 'name')
+        .populate('activity.to', 'name')
+        .lean(),
       Admin: await Task.find({ $or: [{ createdBy: userId }, { assignedTo: userId }] })
         .populate('createdBy', 'name')
         .populate('assignedTo', 'name')
         .populate('comments.user', 'name')
+        .populate('activity.user', 'name')
+        .populate('activity.to', 'name')
         .sort({ createdAt: -1 })
         .lean(),
-      User: await Task.find({ assignedTo: userId }).populate('createdBy', 'name').populate('assignedTo', 'name').populate('comments.user', 'name').sort({ createdAt: -1 }).lean()
+      User: await Task.find({ assignedTo: userId })
+        .populate('createdBy', 'name')
+        .populate('assignedTo', 'name')
+        .populate('comments.user', 'name')
+        .populate('activity.user', 'name')
+        .populate('activity.to', 'name')
+        .sort({ createdAt: -1 })
+        .lean()
     }
   
     const tasks = task[req.roles]
@@ -65,7 +80,14 @@ exports.getById = async (req, res, next) => {
   
     validateObjectId(id, 'Task')
   
-    const task = await Task.findById(id).populate('createdBy', 'name').populate('assignedTo', 'name').populate('comments.user', 'name').lean().exec()
+    const task = await Task.findById(id)
+      .populate('createdBy', 'name')
+      .populate('assignedTo', 'name')
+      .populate('comments.user', 'name')
+      .populate('activity.user', 'name')
+      .populate('activity.to', 'name')
+      .lean()
+      .exec()
     if (!task) throw new CustomError('No such task record found', 404)
   
     res.status(200).json(task)
