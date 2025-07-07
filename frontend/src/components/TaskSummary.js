@@ -1,5 +1,5 @@
 import React from 'react'
-import { FaClock, FaExclamationTriangle, FaCheckCircle, FaCalendarAlt } from 'react-icons/fa'
+import { FaClock, FaExclamationTriangle, FaCheckCircle, FaCalendarAlt, FaListUl } from 'react-icons/fa'
 import { getTaskCategory } from '../utils/taskDateCategory'
 
 const TaskSummary = ({ tasks }) => {
@@ -12,6 +12,8 @@ const TaskSummary = ({ tasks }) => {
     return stats;
   }, { overdue: 0, urgent: 0, upcoming: 0, future: 0, completed: 0 });
 
+  const totalTasks = taskStats.overdue + taskStats.urgent + taskStats.upcoming + taskStats.future + taskStats.completed;
+
   return (
     <div className="task-summary mb-4">
       <h5 className="mb-3">
@@ -19,6 +21,15 @@ const TaskSummary = ({ tasks }) => {
         Task Overview
       </h5>
       <div className="row g-3">
+        <div className="col-md-3 col-sm-6">
+          <div className="card border-primary bg-primary bg-opacity-10">
+            <div className="card-body text-center">
+              <FaListUl className="fs-2 text-primary mb-2" />
+              <h6 className="text-primary mb-1">Total Tasks</h6>
+              <h4 className="text-primary mb-0">{totalTasks}</h4>
+            </div>
+          </div>
+        </div>
         {taskStats.overdue > 0 && (
           <div className="col-md-3 col-sm-6">
             <div className="card border-danger bg-danger bg-opacity-10">

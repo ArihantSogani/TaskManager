@@ -6,8 +6,8 @@ import formatDistanceToNow from 'date-fns/formatDistanceToNow'
 // import { isPast} from 'date-fns'
 import Edit from './Edit'
 import { AiOutlinePaperClip } from 'react-icons/ai'
-import { useState } from 'react'
-import { Badge, Stack } from "react-bootstrap"
+import { useState, useEffect } from 'react'
+import { Badge, Stack, Spinner } from "react-bootstrap"
 
 import TaskComments from './TaskComments'
 import { BsThreeDotsVertical } from 'react-icons/bs'
@@ -221,39 +221,56 @@ function EditModal({ task, show, setShow }) {
 }
 
 function ActivityModal({ show, onHide, activity, users }) {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    if (show) {
+      setLoading(true);
+      // Simulate async fetch or update delay
+      const timer = setTimeout(() => setLoading(false), 600); // adjust as needed
+      return () => clearTimeout(timer);
+    } else {
+      setLoading(false);
+    }
+  }, [show, activity]);
   return (
     <Modal show={show} onHide={onHide} centered>
       <Modal.Header closeButton>
         <Modal.Title>Task Activity Timeline</Modal.Title>
       </Modal.Header>
       <Modal.Body style={{ maxHeight: 400, overflowY: 'auto' }}>
-        {activity && activity.length > 0 ? (
-          <ul className="list-unstyled">
-            {activity.slice().sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)).map((act, idx) => (
-              <li key={idx} style={{ marginBottom: 16 }}>
-                <div>
-                  <b>{act.type === 'assigned' ? 'Assigned' : 'Status Change'}</b> &mdash; {new Date(act.timestamp).toLocaleString()}
-                </div>
-                <div style={{ fontSize: '0.97em', color: '#444' }}>
-                  {act.type === 'assigned' && (
-                    <>
-                      <span>By: <b>{act.user?.name || users[act.user]?.name || act.user || 'Unknown'}</b></span>
-                      {act.to && <span> &rarr; <b>{act.to?.name || users[act.to]?.name || act.to || 'Unknown'}</b></span>}
-                    </>
-                  )}
-                  {act.type === 'status' && (
-                    <>
-                      <span>By: <b>{act.user?.name || users[act.user]?.name || act.user || 'Unknown'}</b></span>
-                      <span> &mdash; Status: <b>{act.status}</b></span>
-                    </>
-                  )}
-                  {act.details && <div style={{ fontSize: '0.93em', color: '#888' }}>{act.details}</div>}
-                </div>
-              </li>
-            ))}
-          </ul>
+        {loading ? (
+          <div className="d-flex justify-content-center align-items-center" style={{ minHeight: 120 }}>
+            <Spinner animation="border" role="status" />
+          </div>
         ) : (
-          <div className="text-muted">No activity yet.</div>
+          activity && activity.length > 0 ? (
+            <ul className="list-unstyled">
+              {activity.slice().sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)).map((act, idx) => (
+                <li key={idx} style={{ marginBottom: 16 }}>
+                  <div>
+                    <b>{act.type === 'assigned' ? 'Assigned' : 'Status Change'}</b> &mdash; {new Date(act.timestamp).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                  <div style={{ fontSize: '0.97em', color: '#444' }}>
+                    {act.type === 'assigned' && (
+                      <>
+                        <span>By: <b>{act.user?.name || users[act.user]?.name || act.user || 'Unknown'}</b></span>
+                        {act.to && <span> &rarr; <b>{act.to?.name || users[act.to]?.name || act.to || 'Unknown'}</b></span>}
+                      </>
+                    )}
+                    {act.type === 'status' && (
+                      <>
+                        <span>By: <b>{act.user?.name || users[act.user]?.name || act.user || 'Unknown'}</b></span>
+                        <span> &mdash; Status: <b>{act.status}</b></span>
+                      </>
+                    )}
+                    {act.details && <div style={{ fontSize: '0.93em', color: '#888' }}>{act.details}</div>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-muted">No activity yet.</div>
+          )
         )}
       </Modal.Body>
       <Modal.Footer>

@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { ROLES } from '../../config/roles'
 import { BsPencilSquare } from 'react-icons/bs'
-import { Alert, Button, Form, Modal } from 'react-bootstrap'
+import { Alert, Button, Form, Modal, Spinner } from 'react-bootstrap'
 import { useTasksContext } from '../../context/task'
 import { useAuthContext } from '../../context/auth'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate'
@@ -26,6 +26,8 @@ const Edit = ({ task, forceShow, setForceShow }) => {
   const modalSetShow = setForceShow || setShow;
   const isAdmin = auth.roles.includes(ROLES.Admin) || auth.roles.includes(ROLES.Root)
   const isAssignedUser = task.assignedTo.some(user => user._id === auth._id)
+  const [loading, setLoading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   // Fetch available labels when modal opens
   useEffect(() => {
@@ -38,30 +40,29 @@ const Edit = ({ task, forceShow, setForceShow }) => {
       }
     }
     
-    if (modalShow && isAdmin) {
+    if (modalShow && (isAdmin || isAssignedUser)) {
       fetchLabels()
     }
-  }, [modalShow, isAdmin, axiosPrivate])
+  }, [modalShow, isAdmin, isAssignedUser, axiosPrivate])
 
   // Debug logs
   console.log('Current user:', auth)
   console.log('Assigned to:', task.assignedTo)
 
   const handleUpdate = async () => {
+    setLoading(true)
     let updateTask = {}
     
-    if (isAdmin) {
+    if (isAdmin || isAssignedUser) {
       updateTask = {
         title: titleRef.current.value,
         description: descriptionRef.current.value,
         status: statusRef.current.value,
         labels: labels.map(l => l.value)
       }
-    } else if (isAssignedUser) {
-      updateTask = { status: statusRef.current.value }
     }
 
-    const prevTask = isAdmin ? 
+    const prevTask = (isAdmin || isAssignedUser) ? 
       [task.title, task.description, task.status] :
       [task.status]
 
@@ -85,12 +86,16 @@ const Edit = ({ task, forceShow, setForceShow }) => {
         dispatch({type: 'UPDATE_TASK', payload: response.data})
         setError(null)
         modalSetShow(false)
+        setLoading(false)
+        window.location.reload();
       } catch (error) {
         statusRef.current.value = task.status
         setError(error.response?.data.error)
+        setLoading(false)
       }
     }else{
       setError("Nothing Changed")
+      setLoading(false)
     }
   }
     
@@ -101,13 +106,16 @@ const Edit = ({ task, forceShow, setForceShow }) => {
       return
     }
 
+    setDeleting(true)
     try {
       await axiosPrivate.delete(`/api/tasks/${task._id}`)
       dispatch({type: 'DELETE_TASK', payload: task})
       setError(null)
       modalSetShow(false)
+      window.location.reload();
     } catch (error) {
       setError(error.response?.data.error)
+      setDeleting(false)
     }
   }
   
@@ -136,7 +144,7 @@ const Edit = ({ task, forceShow, setForceShow }) => {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {isAdmin && (
+          { (isAdmin || isAssignedUser) && (
             <>
               <Form.Group className="mb-3">
                 <Form.Label>Title:</Form.Label>
@@ -155,7 +163,7 @@ const Edit = ({ task, forceShow, setForceShow }) => {
                   options={availableLabels}
                   placeholder="Add Labels..."
                   noOptionsMessage={() => "Type to create new label..."}
-                  formatCreateLabel={(inputValue) => `Create "${inputValue}"`}
+                  formatCreateLabel={(inputValue) => `Create \"${inputValue}\"`}
                 />
               </Form.Group>
             </>
@@ -173,9 +181,34 @@ const Edit = ({ task, forceShow, setForceShow }) => {
         </Modal.Body>
         <Modal.Footer>
           {isAdmin && (
-            <Button variant="danger" onClick={handleDelete}>Delete Task</Button>
+            <Button variant="danger" onClick={handleDelete} disabled={deleting}>
+              {deleting ? (
+                <>
+                  <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Task'
+              )}
+            </Button>
           )}
-          <Button variant="primary" onClick={handleUpdate}>Save Changes</Button>
+          <Button variant="primary" onClick={handleUpdate} disabled={loading}>
+            {loading ? (
+              <>
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                  className="me-2"
+                />
+                Saving...
+              </>
+            ) : (
+              'Save Changes'
+            )}
+          </Button>
         </Modal.Footer>
       </Modal>
       {(isAdmin || isAssignedUser) && showAssign && (

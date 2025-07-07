@@ -25,6 +25,7 @@ const Task = () => {
   const [ filter, setFilter ] = useState('all')
   const axiosPrivate = useAxiosPrivate()
   const admin = auth.roles.includes(ROLES.Admin) || auth.roles.includes(ROLES.Root)
+  const [searchTerm, setSearchTerm] = useState('')
 
   const statusBar = {
     Root: "bg-danger",
@@ -39,26 +40,41 @@ const Task = () => {
     navigate("/")
   }
 
-  // Filter tasks based on due date and status
+  // Filter tasks based on due date, status, and assigned user search
   const filteredTasks = useMemo(() => {
     if (!tasks) return []
+    let filtered = []
     switch (filter) {
       case 'completed':
-        return tasks.filter(task => task.status === 'Completed')
+        filtered = tasks.filter(task => task.status === 'Completed')
+        break
       case 'all':
-        return tasks.filter(task => task.status !== 'Completed')
+        filtered = tasks.filter(task => task.status !== 'Completed')
+        break
       case 'overdue':
-        return tasks.filter(task => getTaskCategory(task) === 'overdue')
+        filtered = tasks.filter(task => getTaskCategory(task) === 'overdue')
+        break
       case 'urgent':
-        return tasks.filter(task => getTaskCategory(task) === 'urgent')
+        filtered = tasks.filter(task => getTaskCategory(task) === 'urgent')
+        break
       case 'upcoming':
-        return tasks.filter(task => getTaskCategory(task) === 'upcoming')
+        filtered = tasks.filter(task => getTaskCategory(task) === 'upcoming')
+        break
       case 'future':
-        return tasks.filter(task => getTaskCategory(task) === 'future')
+        filtered = tasks.filter(task => getTaskCategory(task) === 'future')
+        break
       default:
-        return tasks.filter(task => task.status !== 'Completed')
+        filtered = tasks.filter(task => task.status !== 'Completed')
     }
-  }, [tasks, filter])
+    if (searchTerm.trim() !== '') {
+      const term = searchTerm.trim().toLowerCase()
+      filtered = filtered.filter(task =>
+        Array.isArray(task.assignedTo) &&
+        task.assignedTo.some(user => user?.name?.toLowerCase().includes(term))
+      )
+    }
+    return filtered
+  }, [tasks, filter, searchTerm])
 
   useEffect(() => {
     setTitle("Task Management")
@@ -106,7 +122,43 @@ const Task = () => {
             <span className="d-inline-flex align-items-center"><BsFillPersonFill className="fs-4"/>&ensp;{targetUser?.userRoles}</span>
           </div>)}
 
-          {admin && <Add />}
+          {/* Top row: Add (+) button and search bar for admins */}
+          {admin && (
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              {/* Left: Back button */}
+              <button className="btn btn-outline-primary mb-2" onClick={handleBack}><BiArrowBack /></button>
+              {/* Right: Add (+) and search bar */}
+              <div className="d-flex align-items-center gap-2">
+                <span className="me-3"><Add /></span>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search by assigned user's name..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  style={{ maxWidth: 300 }}
+                />
+                <button
+                  className="btn btn-outline-secondary"
+                  onClick={() => setSearchTerm(searchTerm)}
+                  type="button"
+                >
+                  Search
+                </button>
+                {searchTerm && (
+                  <button
+                    className="btn btn-outline-danger ms-2"
+                    onClick={() => setSearchTerm('')}
+                    type="button"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* For non-admin users, show back button row */}
           {auth.roles.includes(ROLES.User) && (
             <div className="d-flex justify-content-between">
               <button className="btn btn-outline-primary mb-2" onClick={handleBack}><BiArrowBack /></button>

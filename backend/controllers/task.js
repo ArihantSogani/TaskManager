@@ -186,19 +186,21 @@ exports.update = async (req, res, next) => {
     console.log('task.assignedTo:', task.assignedTo.map(user => user._id.toString()))
 
     // Check authorization
-    const isAssignedUser = task.assignedTo.map(user => user._id.toString()).includes(ownerId.toString())
+    const isAssignedUser = task.assignedTo
+      .map(user => (user._id ? user._id.toString() : user.toString()))
+      .includes(ownerId.toString())
     const isAdmin = req.roles.includes(ROLES_LIST.Admin)
     const isRoot = req.roles.includes(ROLES_LIST.Root)
     const isOwner = isAdmin && task.createdBy.toString() === ownerId.toString()
     
-    // For non-admin users, only allow status updates if they are assigned to the task
+    // For non-admin users, only allow updates if they are assigned to the task
     if (!isAdmin && !isRoot) {
       if (!isAssignedUser) {
         throw new CustomError('Not authorized to update this task', 401)
       }
-      // Non-admin users can only update status
-      if (Object.keys(req.body).some(key => key !== 'status')) {
-        throw new CustomError('You can only update the task status', 400)
+      // Non-admin users can only update status, title, description, and labels
+      if (Object.keys(req.body).some(key => !['status', 'title', 'description', 'labels'].includes(key))) {
+        throw new CustomError('You can only update the task status, title, description, or labels', 400)
       }
     }
 
@@ -210,6 +212,18 @@ exports.update = async (req, res, next) => {
     // Log label updates for debugging
     if (req.body.labels && Array.isArray(req.body.labels)) {
       console.log('Updating labels in task:', req.body.labels)
+    }
+
+    // Track changes for activity logging
+    const changes = [];
+    if (typeof req.body.title === 'string' && req.body.title !== task.title) {
+      changes.push({ field: 'title', oldValue: task.title, newValue: req.body.title });
+    }
+    if (typeof req.body.description === 'string' && req.body.description !== task.description) {
+      changes.push({ field: 'description', oldValue: task.description, newValue: req.body.description });
+    }
+    if (Array.isArray(req.body.labels) && JSON.stringify(req.body.labels) !== JSON.stringify(task.labels)) {
+      changes.push({ field: 'labels', oldValue: task.labels, newValue: req.body.labels });
     }
 
     // Update the task
@@ -237,6 +251,28 @@ exports.update = async (req, res, next) => {
         status: status,
         timestamp: new Date(),
         details: `Status changed to ${status}`
+      });
+      await task.save();
+    }
+
+    // Log edit activity for title, description, labels
+    if (changes.length > 0) {
+      // Fetch user name for activity log
+      let userName = '';
+      try {
+        const userDoc = await User.findById(ownerId).select('name');
+        userName = userDoc ? userDoc.name : '';
+      } catch (e) {}
+      changes.forEach(change => {
+        task.activity.push({
+          type: 'edit',
+          user: ownerId,
+          field: change.field,
+          oldValue: change.oldValue,
+          newValue: change.newValue,
+          timestamp: new Date(),
+          details: `${change.field.charAt(0).toUpperCase() + change.field.slice(1)} changed` + (typeof change.oldValue !== 'undefined' ? ` from \"${change.oldValue}\"` : '') + ` to \"${change.newValue}\"` + (userName ? ` by \"${userName}\"` : '')
+        });
       });
       await task.save();
     }
@@ -371,7 +407,7 @@ exports.assignUser = async (req, res, next) => {
         user: ownerId,
         to: user_id,
         timestamp: new Date(),
-        details: `Admin reassigned task from: ${prevAssignees.join(', ')} to: ${user_id.join(', ')}`
+        // details: `Admin reassigned task from: ${prevAssignees.join(', ')} to: ${user_id.join(', ')}`
       });
       await task.save();
       prevAssigneeUser = null;
@@ -391,7 +427,7 @@ exports.assignUser = async (req, res, next) => {
         user: ownerId,
         to: user_id[0],
         timestamp: new Date(),
-        details: `Task reassigned from ${prevAssigneeUser?.name || ownerId} to ${newAssigneeUser?.name || user_id[0]}`
+        // details: `Task reassigned from ${prevAssigneeUser?.name || ownerId} to ${newAssigneeUser?.name || user_id[0]}`
       });
       await task.save();
     }

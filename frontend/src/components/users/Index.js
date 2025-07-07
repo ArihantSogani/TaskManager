@@ -30,7 +30,7 @@ const Index = ({ filteredNames }) => {
               </div>
             </td>
             <td>{user.isOnline ? <MdOutlineWifi className='text-success' size={25}/> : <MdOutlineWifiOff className='text-secondary' size={25}/>}</td>
-            <td>{formatDistanceToNow(new Date(user.lastActive), { addSuffix: true })}</td>
+            <td>{user.lastActive ? new Date(user.lastActive).toLocaleDateString('en-GB') : ''}</td>
             <td>
               <View user={user}/>
               <span style={{ marginLeft: '8px' }}>

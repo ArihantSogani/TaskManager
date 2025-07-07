@@ -85,7 +85,7 @@ const taskSchema = new mongoose.Schema(
         },
         activity: [
             {
-                type: { type: String, enum: ['assigned', 'status'], required: true },
+                type: { type: String, enum: ['assigned', 'status', 'edit'], required: true },
                 user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
                 to: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // for assignment events
                 status: { type: String }, // for status change events

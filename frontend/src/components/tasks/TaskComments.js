@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import useAxiosPrivate from '../../hooks/useAxiosPrivate';
 // import { useAuthContext } from '../../context/auth';
 import { socket } from '../../socket';
-import { Modal, Button } from 'react-bootstrap';
+import { Modal, Button, Spinner } from 'react-bootstrap';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 
 const TaskComments = ({ task }) => {
@@ -11,6 +11,7 @@ const TaskComments = ({ task }) => {
   const [comments, setComments] = useState(task.comments || []);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingComments, setLoadingComments] = useState(false);
   const [error, setError] = useState(null);
   const [show, setShow] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -20,6 +21,17 @@ const TaskComments = ({ task }) => {
     setComments(task.comments || []);
     setUnreadCount(0); // Reset unread count on mount
   }, [task.comments]);
+
+  useEffect(() => {
+    if (show) {
+      setLoadingComments(true);
+      // Simulate async fetch delay for comments
+      const timer = setTimeout(() => setLoadingComments(false), 600); // adjust as needed
+      return () => clearTimeout(timer);
+    } else {
+      setLoadingComments(false);
+    }
+  }, [show]);
 
   useEffect(() => {
     // Listen for real-time comment updates via socket
@@ -90,15 +102,23 @@ const TaskComments = ({ task }) => {
           <Modal.Title>Comments</Modal.Title>
         </Modal.Header>
         <Modal.Body style={{maxHeight: 300, overflowY: 'auto', padding: 12}}>
-          {comments.length === 0 && <div className="text-muted">No comments yet.</div>}
-          {comments.map((c, idx) => (
-            <div key={idx} style={{ marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div style={{ fontWeight: 500, fontSize: '0.97em', wordBreak: 'break-word', whiteSpace: 'pre-line', maxWidth: '70%' }}>
-                {(c.user && (c.user.name || c.user.username || c.user.email)) || 'User'}: <span style={{ fontWeight: 400 }}>{c.text}</span>
-              </div>
-              <div style={{ color: '#aaa', fontSize: '0.85em', marginLeft: 8, whiteSpace: 'nowrap' }}>{formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}</div>
+          {loadingComments ? (
+            <div className="d-flex justify-content-center align-items-center" style={{ minHeight: 100 }}>
+              <Spinner animation="border" role="status" />
             </div>
-          ))}
+          ) : (
+            <>
+              {comments.length === 0 && <div className="text-muted">No comments yet.</div>}
+              {comments.map((c, idx) => (
+                <div key={idx} style={{ marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ fontWeight: 500, fontSize: '0.97em', wordBreak: 'break-word', whiteSpace: 'pre-line', maxWidth: '70%' }}>
+                    {(c.user && (c.user.name || c.user.username || c.user.email)) || 'User'}: <span style={{ fontWeight: 400 }}>{c.text}</span>
+                  </div>
+                  <div style={{ color: '#aaa', fontSize: '0.85em', marginLeft: 8, whiteSpace: 'nowrap' }}>{formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}</div>
+                </div>
+              ))}
+            </>
+          )}
         </Modal.Body>
         <Modal.Footer style={{display: 'flex', flexDirection: 'column', alignItems: 'stretch'}}>
           <form className="d-flex w-100" onSubmit={handleAddComment} style={{ gap: 4 }}>
@@ -113,7 +133,16 @@ const TaskComments = ({ task }) => {
               disabled={loading}
             />
             <Button variant="primary" size="sm" type="submit" disabled={loading || !newComment.trim()} style={{ fontSize: '0.95em', borderRadius: 3 }}>
-              {loading ? '...' : 'Add'}
+              {loading ? (
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                  className="me-1"
+                />
+              ) : 'Send'}
             </Button>
           </form>
           {error && <div className="text-danger mt-1" style={{ fontSize: '0.93em' }}>{error}</div>}

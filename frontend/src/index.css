@@ -677,6 +677,10 @@ form.login {
 .task-summary .card {
   transition: all 0.3s ease;
   border-width: 2px;
+  min-width: 0;
+  width: 180px;
+  max-width: 220px;
+  margin: 0 auto;
 }
 
 .task-summary .card:hover {
@@ -685,17 +689,23 @@ form.login {
 }
 
 .task-summary .card-body {
-  padding: 1rem;
+  padding: 0.5rem;
 }
 
 .task-summary h6 {
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.75rem;
 }
 
 .task-summary h4 {
   font-weight: bold;
   margin-bottom: 0;
+  font-size: 1.1rem;
+}
+
+.task-summary .fs-2 {
+  font-size: 1.2rem !important;
 }
 
 /* Responsive Design for Task Components */
@@ -705,19 +715,23 @@ form.login {
   }
   
   .task-summary .col-md-3 {
-    padding: 0.5rem;
+    padding: 0.25rem;
   }
   
   .task-summary .card-body {
-    padding: 0.75rem;
+    padding: 0.35rem;
   }
   
   .task-summary h6 {
-    font-size: 0.875rem;
+    font-size: 0.65rem;
   }
   
   .task-summary h4 {
-    font-size: 1.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .task-summary .fs-2 {
+    font-size: 1rem !important;
   }
   
   .due-date-section {
@@ -736,11 +750,11 @@ form.login {
 
 @media (max-width: 576px) {
   .task-summary .col-sm-6 {
-    padding: 0.25rem;
+    padding: 0.1rem;
   }
   
   .task-summary .card-body {
-    padding: 0.5rem;
+    padding: 0.2rem;
   }
   
   .due-date-section {
@@ -754,6 +768,18 @@ form.login {
   
   .due-date-section .fs-5 {
     margin-bottom: 0.5rem;
+  }
+  
+  .task-summary h6 {
+    font-size: 0.55rem;
+  }
+  
+  .task-summary h4 {
+    font-size: 0.7rem;
+  }
+  
+  .task-summary .fs-2 {
+    font-size: 0.8rem !important;
   }
 }
 
@@ -802,4 +828,21 @@ form.login {
   font-weight: bold;
   letter-spacing: 1px;
   font-size: 0.85em;
+}
+
+.task-summary .row.g-3 {
+  gap: 0.5rem !important;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+.task-summary .col-md-3,
+.task-summary .col-sm-6 {
+  flex: 0 0 200px;
+  width: 200px;
+  max-width: 220px;
+  padding: 0 0.5rem;
+  display: flex;
+  align-items: stretch;
 }
