@@ -245,10 +245,10 @@ function ActivityModal({ show, onHide, activity, users }) {
         ) : (
           activity && activity.length > 0 ? (
             <ul className="list-unstyled">
-              {activity.slice().sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)).map((act, idx) => (
+              {activity.slice().sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).map((act, idx) => (
                 <li key={idx} style={{ marginBottom: 16 }}>
                   <div>
-                    <b>{act.type === 'assigned' ? 'Assigned' : 'Status Change'}</b> &mdash; {new Date(act.timestamp).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    <b>{act.type === 'assigned' ? 'Assigned' : 'Changes Made'}</b> &mdash; {new Date(act.timestamp).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
                   </div>
                   <div style={{ fontSize: '0.97em', color: '#444' }}>
                     {act.type === 'assigned' && (

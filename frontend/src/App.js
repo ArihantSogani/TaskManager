@@ -48,7 +48,7 @@ function App() {
           <Route element={<PersistLogin />}>
             <Route path="/" element={<Home />}/>
             <Route path="/login" element={!auth ? <Login /> : <Navigate to={link} />} />
-            <Route path="/signup" element={!auth ? <Signup /> : <Navigate to="/" />} />
+            {/* <Route path="/signup" element={!auth ? <Signup /> : <Navigate to="/" />} /> */}
 
             <Route element={<RequireAuth />}>
               <Route element={<RequireRoles Roles={[...Object.values(ROLES)]} />}>

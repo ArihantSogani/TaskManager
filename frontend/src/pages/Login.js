@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { useLogin } from '../hooks/useLogin'
-import { Link } from 'react-router-dom'
+// import { Link } from 'react-router-dom'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import { Form } from 'react-bootstrap'
 
@@ -41,7 +41,7 @@ const Login = () => {
 
         <button className="w-100 mt-3" disabled={isLoading}>Log In</button>
 
-        <div className="signup-prompt mt-3">Create an account ? <Link to="/signup">Signup</Link></div>
+        {/* <div className="signup-prompt mt-3">Create an account ? <Link to="/signup">Signup</Link></div> */}
         {error && <div className="error">{error}</div>}
       </form>
     </>
