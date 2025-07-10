@@ -44,10 +44,10 @@ const User = () => {
 
     // Ensure socket is connected before emitting online event
     if (socket.connected) {
-      socket.emit('online', auth._id)
+      socket.emit('online', auth.id)
     } else {
       socket.on('connect', () => {
-        socket.emit('online', auth._id)
+        socket.emit('online', auth.id)
       })
     }
     
@@ -94,9 +94,9 @@ const User = () => {
                   <th scope="col">Email</th>
                   <th scope="col">Roles</th>
                   <th scope="col">Account Status</th>
-                  <th scope="col">Active Status</th>
                   <th scope="col">Active Date</th>
                   <th scope="col">Action</th>
+                  {/* <th scope="col">Action</th> */}
                 </tr>
               </thead>
               <tbody>

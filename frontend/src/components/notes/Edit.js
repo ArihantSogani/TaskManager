@@ -87,9 +87,9 @@ const Edit = () => {
         updateNote.id = targetUser.userId
       }
 
-      await axiosPrivate.patch(`/api/notes/${note._id}`, updateNote)
+      await axiosPrivate.patch(`/api/notes/${note.id}`, updateNote)
       setError(null)
-      navigate(`/note/view/${note._id}`)
+      navigate(`/note/view/${note.id}`)
     } catch (error) {
       // console.log(error)
       setError(error.response?.data.error)
@@ -136,7 +136,7 @@ const Edit = () => {
               {error && (<Alert variant={'danger'}>{error}</Alert>)}
               <Stack direction="horizontal" gap={2} className="justify-content-end">
                 <Button type="submit" variant="primary">Save</Button>
-                <Link to={`/note/view/${note._id}`}>
+                <Link to={`/note/view/${note.id}`}>
                   <Button type="button" variant="outline-secondary">Cancel</Button>
                 </Link>
               </Stack>

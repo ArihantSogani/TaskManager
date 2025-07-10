@@ -6,19 +6,19 @@ export const TasksContext = createContext()
 export const tasksReducer = (state, action) => {
   switch (action.type) {
     case 'SET_TASKS':
-      return { tasks: action.payload }
+      return { tasks: Array.isArray(action.payload) ? action.payload : [] }
     case 'CREATE_TASK':
-      return { tasks: [action.payload, ...state.tasks] }
+      return { tasks: [action.payload, ...(Array.isArray(state.tasks) ? state.tasks : [])] }
     case 'UPDATE_TASK':
-      return { 
-        tasks: state.tasks.map(task => 
-          task._id === action.payload._id ? action.payload : task
+      return {
+        tasks: (Array.isArray(state.tasks) ? state.tasks : []).map(task =>
+          task.id === action.payload.id ? action.payload : task
         )
       }
     case 'DELETE_TASK':
-      return { tasks: state.tasks.filter(t => t._id !== action.payload._id) }
+      return { tasks: (Array.isArray(state.tasks) ? state.tasks : []).filter(t => t.id !== action.payload.id) }
     default:
-      return state
+      return { tasks: Array.isArray(state.tasks) ? state.tasks : [] }
   }
 }
 
@@ -31,7 +31,7 @@ export const TasksContextProvider = ({ children }) => {
       dispatch({ type: 'UPDATE_TASK', payload: updatedTask })
     })
     socket.on('task-deleted', (deletedTaskId) => {
-      dispatch({ type: 'DELETE_TASK', payload: { _id: deletedTaskId } })
+      dispatch({ type: 'DELETE_TASK', payload: { id: deletedTaskId } })
     })
     return () => {
       socket.off('task-updated')

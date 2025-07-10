@@ -1,3 +1,4 @@
+/*
 const mongoose = require('mongoose')
 
 const taskSchema = new mongoose.Schema(
@@ -15,7 +16,7 @@ const taskSchema = new mongoose.Schema(
             type: String,
             required: true
         },
-        createdBy:{
+        created_by: {
             type: mongoose.Schema.Types.ObjectId,
             required: true,
             ref: 'User'
@@ -120,5 +121,6 @@ taskSchema.methods.markNotificationAsRead = async function(userId, notificationI
     }
     return false
 }
+*/
 
-module.exports = mongoose.model('Task', taskSchema)
+// module.exports = null 

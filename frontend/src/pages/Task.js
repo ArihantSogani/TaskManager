@@ -26,6 +26,7 @@ const Task = () => {
   const axiosPrivate = useAxiosPrivate()
   const admin = auth.roles.includes(ROLES.Admin) || auth.roles.includes(ROLES.Root)
   const [searchTerm, setSearchTerm] = useState('')
+  const [allUsers, setAllUsers] = useState([]);
 
   const statusBar = {
     Root: "bg-danger",
@@ -69,8 +70,8 @@ const Task = () => {
     if (searchTerm.trim() !== '') {
       const term = searchTerm.trim().toLowerCase()
       filtered = filtered.filter(task =>
-        Array.isArray(task.assignedTo) &&
-        task.assignedTo.some(user => user?.name?.toLowerCase().includes(term))
+        Array.isArray(task.assignedUsers) &&
+task.assignedUsers.some(user => user?.name?.toLowerCase().includes(term))
       )
     }
     return filtered
@@ -112,6 +113,20 @@ const Task = () => {
       abortController.abort()
     }
   },[ auth, targetUser, setTitle, axiosPrivate, dispatch, admin ])
+
+  useEffect(() => {
+    async function fetchAllUsers() {
+      try {
+        const response = await axiosPrivate.get('/api/users');
+        setAllUsers(response.data);
+        // Debug log: show all user IDs and names
+        console.log('[DEBUG] All users:', response.data.map(u => ({ id: u.id, name: u.name })));
+      } catch (err) {
+        console.error('[DEBUG] Failed to fetch all users:', err);
+      }
+    }
+    fetchAllUsers();
+  }, [axiosPrivate]);
 
   return (
     <>
@@ -171,7 +186,7 @@ const Task = () => {
           {/* Task Filter */}
           {tasks && tasks.length > 0 && <TaskFilter filter={filter} setFilter={setFilter} />}
           
-          {filteredTasks && <Details tasks={filteredTasks}/>}
+          {filteredTasks && <Details tasks={filteredTasks} allUsers={allUsers} />}
           {error && !tasks?.length && <div className="error">{error}</div>}
           {filteredTasks && filteredTasks.length === 0 && tasks && tasks.length > 0 && (
             <div className="text-center text-muted py-4">

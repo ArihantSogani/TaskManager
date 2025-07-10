@@ -1,3 +1,4 @@
+/*
 const mongoose = require('mongoose')
 
 const labelSchema = new mongoose.Schema(
@@ -8,7 +9,7 @@ const labelSchema = new mongoose.Schema(
             unique: true,
             trim: true
         },
-        createdBy: {
+        created_by: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
             required: true
@@ -22,4 +23,5 @@ const labelSchema = new mongoose.Schema(
 // Index for faster queries
 labelSchema.index({ name: 1 })
 
-module.exports = mongoose.model('Label', labelSchema) 
+module.exports = mongoose.model('Label', labelSchema)
+*/ 

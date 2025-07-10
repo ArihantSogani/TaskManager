@@ -26,5 +26,11 @@ const errorHandler = (err, req, res, next) => {
         stack: process.env.NODE_ENV === 'production' ? null :  err.stack 
     })
 }
-
+// module.exports = (err, req, res, next) => {
+//   console.error('Global error handler:', err);
+//   if (err && err.stack) {
+//     console.error(err.stack);
+//   }
+//   res.status(err.status || 500).json({ error: err.message || 'Internal Server Error', stack: err.stack || null });
+// };
 module.exports = { CustomError, errorHandler, notFound } 

@@ -50,7 +50,7 @@ const Edit = ({ user }) => {
   const checkChange = Object.keys(updateUser).length === 0
 
   if(!checkChange){
-    updateUser.id = user._id
+    updateUser.id = user.id
 
     if(updateUser.roles){
       updateUser.roles = [rolesRef.current.value]

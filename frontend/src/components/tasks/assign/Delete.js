@@ -21,7 +21,7 @@ const Delete = ({ user }) => {
     }
 
     try {
-      const response = await axiosPrivate.delete(`/api/tasks/assign/${assignedUser._id}`, {data: {user_id: user._id}})
+      const response = await axiosPrivate.delete(`/api/tasks/assign/${assignedUser.id}`, {data: {user_id: user.id}})
       setAssignedUser(response.data)
       setError(null)
       setShow(false)

@@ -1,3 +1,4 @@
+/*
 const mongoose = require('mongoose')
 // const otpSchema = require('./otp')  // Not needed without email verification
 const passwordSchema = require('./password')
@@ -26,11 +27,11 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  isOnline: {
+  is_online: {
     type: Boolean,
     default: false
   },
-  lastActive: {
+  last_active: {
     type: Date,
     default: Date.now
   }
@@ -84,5 +85,6 @@ userSchema.statics.login = async function(email, password) {
 
   return user
 }
+*/
 
-module.exports = mongoose.model('User', userSchema)
+// module.exports = null

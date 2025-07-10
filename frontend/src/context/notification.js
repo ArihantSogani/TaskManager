@@ -15,7 +15,7 @@ export const NotificationProvider = ({ children }) => {
 
   // Fetch notifications from backend
   const fetchNotifications = useCallback(async () => {
-    if (!auth?._id) return;
+    if (!auth?.id) return;
     try {
       const res = await axiosPrivate.get('/api/notification')
       setNotifications(res.data.notifications)
@@ -55,7 +55,7 @@ export const NotificationProvider = ({ children }) => {
     setLoading(true)
     try {
       await axiosPrivate.post('/api/notification/read', { notificationId: id })
-      setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n))
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
       setUnreadCount(prev => Math.max(0, prev - 1))
     } catch (err) {
       // Optionally handle error

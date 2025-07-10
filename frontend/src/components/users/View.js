@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { FaEye } from 'react-icons/fa'
 import { Modal } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
-import { FaTasks, FaStickyNote } from 'react-icons/fa'
+import { FaTasks } from 'react-icons/fa'
 import { useUserContext } from '../../context/user'
 
 const View = ({ user }) => {
@@ -10,7 +10,7 @@ const View = ({ user }) => {
   const { setTargetUser } = useUserContext()
  
   const handleClick = () => {
-    setTargetUser({ userId: user._id, userName: user.name, userEmail: user.email, userRoles: user.roles })
+    setTargetUser({ userId: user.id, userName: user.name, userEmail: user.email, userRoles: user.roles })
   }
 
   return (

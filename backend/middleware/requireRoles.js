@@ -1,4 +1,4 @@
-const User = require('../models/user/User')
+const { User } = require('../models/sequelize');
 const { CustomError } = require('./errorHandler')
 
 const requireRoles = (Roles) => {

@@ -1,8 +1,8 @@
 import { startOfDay, endOfDay, endOfWeek, isBefore, isAfter, isWithinInterval } from 'date-fns';
 
 export function getTaskCategory(task, now = new Date()) {
-  if (task.status === 'Completed' || !task.dueDate) return null;
-  const due = new Date(task.dueDate);
+  if (task.status === 'Completed' || !task.due_date) return null;
+  const due = new Date(task.due_date);
   const todayStart = startOfDay(now);
   const todayEnd = endOfDay(now);
   const weekEnd = endOfWeek(now, { weekStartsOn: 1 });

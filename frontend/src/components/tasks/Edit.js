@@ -17,7 +17,7 @@ const Edit = ({ task, forceShow, setForceShow }) => {
   const [error, setError] = useState(null)
   const [show, setShow] = useState(false)
   const [showAssign, setShowAssign] = useState(false)
-  const [labels, setLabels] = useState(task.labels ? task.labels.map(label => ({ value: label, label: label })) : [])
+  const [labels, setLabels] = useState(task.labels ? task.labels.map(label => ({ value: label.name || label, label: label.name || label })) : [])
   const [availableLabels, setAvailableLabels] = useState([])
   const titleRef = useRef('')
   const descriptionRef = useRef('')
@@ -25,9 +25,20 @@ const Edit = ({ task, forceShow, setForceShow }) => {
   const modalShow = typeof forceShow === 'boolean' ? forceShow : show;
   const modalSetShow = setForceShow || setShow;
   const isAdmin = auth.roles.includes(ROLES.Admin) || auth.roles.includes(ROLES.Root)
-  const isAssignedUser = task.assignedTo.some(user => user._id === auth._id)
+  const userId = auth.id || auth.user?.id;
+  const isAssignedUser = Array.isArray(task.assignedUsers) && task.assignedUsers.some(user => Number(user.id) === Number(userId));
   const [loading, setLoading] = useState(false)
-  const [deleting, setDeleting] = useState(false)
+
+  // Show title, description, and labels for both admins and assigned users
+  const canEditFields = isAdmin || isAssignedUser;
+
+  // Prepare previous values for change detection
+  const prevTask = {
+    title: task.title,
+    description: task.description,
+    status: task.status,
+    labels: (task.labels || []).map(l => l.name || l)
+  };
 
   // Fetch available labels when modal opens
   useEffect(() => {
@@ -40,14 +51,15 @@ const Edit = ({ task, forceShow, setForceShow }) => {
       }
     }
     
-    if (modalShow && (isAdmin || isAssignedUser)) {
+    if (modalShow && isAdmin) {
       fetchLabels()
     }
-  }, [modalShow, isAdmin, isAssignedUser, axiosPrivate])
+  }, [modalShow, isAdmin, axiosPrivate])
 
   // Debug logs
+  console.log('[EDIT DEBUG] Rendered for task:', task.id, 'user:', auth?.user?.name, 'userId:', userId, 'roles:', auth?.roles, 'isAdmin:', isAdmin, 'isAssignedUser:', isAssignedUser);
   console.log('Current user:', auth)
-  console.log('Assigned to:', task.assignedTo)
+  console.log('Assigned to:', task.assignedUsers)
 
   const handleUpdate = async () => {
     setLoading(true)
@@ -61,16 +73,20 @@ const Edit = ({ task, forceShow, setForceShow }) => {
         labels: labels.map(l => l.value)
       }
     }
-
-    const prevTask = (isAdmin || isAssignedUser) ? 
-      [task.title, task.description, task.status] :
-      [task.status]
-
+    // Only keep changed fields
     Object.keys(updateTask).forEach(key => {
-      if (validator.isEmpty(updateTask[key].toString(), { ignore_whitespace:true }) || prevTask.includes(updateTask[key])) {
-        delete updateTask[key]
+      if (key === 'labels') {
+        const newLabels = updateTask.labels.sort();
+        const oldLabels = prevTask.labels.sort();
+        if (JSON.stringify(newLabels) === JSON.stringify(oldLabels)) {
+          delete updateTask[key];
+        }
+      } else {
+        if (updateTask[key] === undefined || updateTask[key] === null || validator.isEmpty(updateTask[key].toString(), { ignore_whitespace:true }) || updateTask[key] === prevTask[key]) {
+          delete updateTask[key];
+        }
       }
-    })
+    });
     
     if (!auth) {
       setError('You must be logged in')
@@ -80,9 +96,9 @@ const Edit = ({ task, forceShow, setForceShow }) => {
     const checkChange = Object.keys(updateTask).length === 0
 
     if(!checkChange){
-      // alert(task._id);
+      // alert(task.id);
       try {
-        const response = await axiosPrivate.patch(`/api/tasks/${task._id}`, updateTask)
+        const response = await axiosPrivate.patch(`/api/tasks/${task.id}`, updateTask)
         dispatch({type: 'UPDATE_TASK', payload: response.data})
         setError(null)
         modalSetShow(false)
@@ -106,20 +122,18 @@ const Edit = ({ task, forceShow, setForceShow }) => {
       return
     }
 
-    setDeleting(true)
     try {
-      await axiosPrivate.delete(`/api/tasks/${task._id}`)
+      await axiosPrivate.delete(`/api/tasks/${task.id}`)
       dispatch({type: 'DELETE_TASK', payload: task})
       setError(null)
       modalSetShow(false)
-      window.location.reload();
     } catch (error) {
       setError(error.response?.data.error)
-      setDeleting(false)
     }
   }
   
   if (!isAdmin && !isAssignedUser) {
+    console.log('[EDIT DEBUG] Not admin or assigned user, returning null for task:', task.id);
     return null
   }
 
@@ -128,14 +142,14 @@ const Edit = ({ task, forceShow, setForceShow }) => {
       {typeof forceShow !== 'boolean' && (
         <button className="btn btn-outlined text-muted taskbtn" onClick={() => setShow(!show)}>
           <BsPencilSquare className="fs-5"/>
-          <small>&ensp;{isAdmin ? 'EDIT' : 'UPDATE STATUS'}</small>
+          <small>&ensp;{canEditFields ? 'EDIT' : 'UPDATE STATUS'}</small>
         </button>
       )}
 
       <Modal show={modalShow} onHide={() => {modalSetShow(false);setError(null)}} centered>
         <Modal.Header closeButton>
           <Modal.Title style={{display: 'flex', alignItems: 'center', gap: 12}}>
-            {isAdmin ? 'Edit Task' : 'Update Task Status'}
+            {canEditFields ? 'Edit Task' : 'Update Task Status'}
             {(isAdmin || isAssignedUser) && (
               <Button variant="outline-secondary" size="sm" style={{marginLeft: 0}} onClick={() => setShowAssign(true)} title="Assign User">
                 <AiOutlineUsergroupAdd className="fs-5" />
@@ -144,7 +158,7 @@ const Edit = ({ task, forceShow, setForceShow }) => {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          { (isAdmin || isAssignedUser) && (
+          {canEditFields && (
             <>
               <Form.Group className="mb-3">
                 <Form.Label>Title:</Form.Label>
@@ -163,7 +177,7 @@ const Edit = ({ task, forceShow, setForceShow }) => {
                   options={availableLabels}
                   placeholder="Add Labels..."
                   noOptionsMessage={() => "Type to create new label..."}
-                  formatCreateLabel={(inputValue) => `Create \"${inputValue}\"`}
+                  formatCreateLabel={(inputValue) => `Create "${inputValue}"`}
                 />
               </Form.Group>
             </>
@@ -181,16 +195,7 @@ const Edit = ({ task, forceShow, setForceShow }) => {
         </Modal.Body>
         <Modal.Footer>
           {isAdmin && (
-            <Button variant="danger" onClick={handleDelete} disabled={deleting}>
-              {deleting ? (
-                <>
-                  <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
-                  Deleting...
-                </>
-              ) : (
-                'Delete Task'
-              )}
-            </Button>
+            <Button variant="danger" onClick={handleDelete}>Delete Task</Button>
           )}
           <Button variant="primary" onClick={handleUpdate} disabled={loading}>
             {loading ? (
@@ -205,14 +210,12 @@ const Edit = ({ task, forceShow, setForceShow }) => {
                 />
                 Saving...
               </>
-            ) : (
-              'Save Changes'
-            )}
+            ) : 'Save Changes'}
           </Button>
         </Modal.Footer>
       </Modal>
       {(isAdmin || isAssignedUser) && showAssign && (
-        <AssignAdd task_id={task._id} show={showAssign} setShow={setShowAssign} />
+        <AssignAdd task_id={task.id} show={showAssign} setShow={setShowAssign} />
       )}
     </>
   )

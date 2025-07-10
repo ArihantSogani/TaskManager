@@ -45,12 +45,19 @@ const Add = ({ show: showProp, setShow: setShowProp }) => {
    
     try {
       const response = await axiosPrivate.post('/api/users', addUser)
-      dispatch({type: 'CREATE_USER', payload: response.data})
-      setError(null)
-      setShow(false)
+      try {
+        dispatch({type: 'CREATE_USER', payload: response.data})
+        setError(null)
+        setShow(false)
+      } catch (dispatchErr) {
+        setError('User created, but UI update failed. Please refresh.')
+      }
     } catch (error) {
-      // console.log(error)
-      setError(error.response?.data.error)
+      if (error.response && error.response.data && error.response.data.error) {
+        setError(error.response.data.error)
+      } else {
+        setError('An unexpected error occurred. Please try again.')
+      }
     }
   }
 

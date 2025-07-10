@@ -1,13 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
 import useAxiosPrivate from '../../hooks/useAxiosPrivate';
-// import { useAuthContext } from '../../context/auth';
 import { socket } from '../../socket';
 import { Modal, Button, Spinner } from 'react-bootstrap';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 
 const TaskComments = ({ task }) => {
   const axiosPrivate = useAxiosPrivate();
-  // const { auth } = useAuthContext();
   const [comments, setComments] = useState(task.comments || []);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
@@ -36,14 +34,14 @@ const TaskComments = ({ task }) => {
   useEffect(() => {
     // Listen for real-time comment updates via socket
     const handleNewComment = (data) => {
-      if (data.taskId === task._id) {
+      if (data.taskId === task.id) {
         setComments((prev) => [...prev, data.comment]);
         if (!show) setUnreadCount((prev) => prev + 1);
       }
     };
     socket.on('task-comment', handleNewComment);
     return () => socket.off('task-comment', handleNewComment);
-  }, [task._id, show]);
+  }, [task.id, show]);
 
   // Reset unread count when modal is opened
   useEffect(() => {
@@ -56,14 +54,22 @@ const TaskComments = ({ task }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axiosPrivate.post(`/api/tasks/${task._id}/comments`, { text: newComment });
-      setComments(response.data.comments || []);
+      const response = await axiosPrivate.post(`/api/tasks/${task.id}/comments`, { text: newComment });
+      // The response should contain the updated task with comments
+      if (response.data.comments) {
+        setComments(response.data.comments);
+      } else if (response.data.task && response.data.task.comments) {
+        setComments(response.data.task.comments);
+      }
       setNewComment('');
       inputRef.current && inputRef.current.focus();
       // Emit socket event for real-time update
+      const newCommentData = response.data.comments ? 
+        response.data.comments[response.data.comments.length - 1] :
+        response.data.task.comments[response.data.task.comments.length - 1];
       socket.emit('task-comment', {
-        taskId: task._id,
-        comment: response.data.comments[response.data.comments.length - 1],
+        taskId: task.id,
+        comment: newCommentData,
       });
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to add comment');
@@ -110,11 +116,11 @@ const TaskComments = ({ task }) => {
             <>
               {comments.length === 0 && <div className="text-muted">No comments yet.</div>}
               {comments.map((c, idx) => (
-                <div key={idx} style={{ marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div key={c.id || idx} style={{ marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ fontWeight: 500, fontSize: '0.97em', wordBreak: 'break-word', whiteSpace: 'pre-line', maxWidth: '70%' }}>
                     {(c.user && (c.user.name || c.user.username || c.user.email)) || 'User'}: <span style={{ fontWeight: 400 }}>{c.text}</span>
                   </div>
-                  <div style={{ color: '#aaa', fontSize: '0.85em', marginLeft: 8, whiteSpace: 'nowrap' }}>{formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}</div>
+                  <div style={{ color: '#aaa', fontSize: '0.85em', marginLeft: 8, whiteSpace: 'nowrap' }}>{formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}</div>
                 </div>
               ))}
             </>

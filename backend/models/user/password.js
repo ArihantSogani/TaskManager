@@ -1,3 +1,4 @@
+/*
 const mongoose = require('mongoose')
 
 const passwordSchema = new mongoose.Schema({
@@ -13,3 +14,4 @@ const passwordSchema = new mongoose.Schema({
 })
 
 module.exports = passwordSchema
+*/

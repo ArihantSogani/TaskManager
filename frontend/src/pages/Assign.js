@@ -19,7 +19,7 @@ const Assgin = () => {
   const { assignedUser, setAssignedUser } =  useTasksContext()
   const axiosPrivate = useAxiosPrivate()
   const location = useLocation()
-  const { id, title, createdBy } = location.state ?? ""
+  const { id, title, creator } = location.state ?? ""
   const isAdminOrRoot = auth.roles.includes(ROLES.Admin) || auth.roles.includes(ROLES.Root)
   const admin = auth && isAdminOrRoot
 
@@ -47,7 +47,7 @@ const Assgin = () => {
     }
   },[ auth, id, setAssignedUser, axiosPrivate, setTitle])
   
-  const filteredLists = useMemo(() => assignedUser.assignedTo?.filter(t => t.name.toLowerCase().includes(query.toLowerCase())), [assignedUser, query])
+  const filteredLists = useMemo(() => assignedUser.assignedUsers?.filter(t => t.name.toLowerCase().includes(query.toLowerCase())), [assignedUser, query])
 
   return (
     <>
@@ -58,7 +58,7 @@ const Assgin = () => {
             <span className="mx-3 d-inline-flex align-items-center"><FaTasks className="fs-4"/>&ensp;{title}</span>
           </OverlayTrigger>
           <OverlayTrigger placement="bottom" overlay={<Tooltip>Task created by</Tooltip>}>
-            <span className="d-inline-flex align-items-center"><MdAdminPanelSettings className="fs-4"/>&ensp;{createdBy.name}</span>
+            <span className="d-inline-flex align-items-center"><MdAdminPanelSettings className="fs-4"/>&ensp;{creator.name}</span>
           </OverlayTrigger>
         </div>
         
@@ -69,7 +69,7 @@ const Assgin = () => {
           <button className="btn btn-outline-primary" type="button"><GoSearch/></button>
         </div>
 
-          {(assignedUser?.assignedTo?.length > 0) && (
+          {(assignedUser?.assignedUsers?.length > 0) && (
             <table className="table table-hover mt-3">
               <thead className="table-light">
                 <tr>

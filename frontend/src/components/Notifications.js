@@ -29,8 +29,6 @@ const Notifications = () => {
   const { addNotification } = useNotificationContext();
 
   useEffect(() => {
-    // This component now mounts immediately.
-    // We will handle connection and listeners inside the next useEffect.
     
     // Ensure we ask for permission as soon as the app loads.
     if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
@@ -87,29 +85,46 @@ const Notifications = () => {
         });
       };
 
+    const onTaskUpdated = (data) => {
+      // --- Start of Task Updated Debug ---
+      console.log('--- Task Updated Debug ---');
+      console.log('1. Received "task-updated" event. Data:', data);
+      const message = data?.message || 'A task was updated.';
+      toast.info(message);
+      showDesktopNotification('Task Update', message);
+      addNotification({
+        id: Date.now() + Math.random(),
+        message: message,
+        time: new Date().toLocaleTimeString(),
+        read: false,
+      });
+    };
+
     // Add listeners
     socket.on('notification', onNotification);
     socket.on('taskUpdate', onTaskUpdate);
     socket.on('taskComment', onTaskComment);
+    socket.on('task-updated', onTaskUpdated);
 
     return () => {
       // Cleanup: remove listeners when the component unmounts
       socket.off('notification', onNotification);
       socket.off('taskUpdate', onTaskUpdate);
       socket.off('taskComment', onTaskComment);
+      socket.off('task-updated', onTaskUpdated);
     };
   }, [addNotification]);
 
 
   useEffect(() => {
     // This effect handles the socket connection based on auth state.
-    if (auth?._id) {
+    if (auth?.id) {
       // If we have an authenticated user
       if (!socket.connected) {
         // And the socket is not already connected, then connect.
-        socket.auth = { userId: auth._id };
+        socket.auth = { userId: auth.id };
         socket.connect();
-        console.log(`Socket connecting with user ID: ${auth._id}`);
+        console.log(`Socket connecting with user ID: ${auth.id}`);
       }
     } else if (socket.connected) {
       // If we do not have an authenticated user but the socket is connected, disconnect.

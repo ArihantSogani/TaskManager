@@ -1,4 +1,3 @@
-const mongoose = require('mongoose')
 const validator = require('validator')
 const { CustomError } = require('../middleware/errorHandler')
 
@@ -19,9 +18,12 @@ const validateAuthInput = (fieldName, value) => {
 }
   
 const validateObjectId = (id, idType) => {
-    if (validator.isEmpty(id, { ignore_whitespace:true })) throw new CustomError(`${idType} id required`, 400)
-
-    if (!mongoose.Types.ObjectId.isValid(id)) throw new CustomError(`No such ${idType.toLowerCase()} id found`, 404)
+    if (!id) throw new CustomError(`${idType} id required`, 400)
+    
+    // For MySQL, validate that id is a positive integer
+    if (!Number.isInteger(Number(id)) || Number(id) <= 0) {
+        throw new CustomError(`Invalid ${idType.toLowerCase()} id format`, 400)
+    }
 }
 
 module.exports = { validateAuthInputField, validateObjectId }

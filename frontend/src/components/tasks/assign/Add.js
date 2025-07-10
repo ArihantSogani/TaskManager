@@ -51,9 +51,16 @@ const Add = ({ task_id, show, setShow }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const selectedUserIds = Array.from(nameRef.current.selectedOptions, opt => opt.value)
+    // Convert selected user IDs to numbers
+    const selectedUserIds = Array.from(nameRef.current.selectedOptions, opt => Number(opt.value))
+    console.log('Selected user IDs:', selectedUserIds, 'Types:', selectedUserIds.map(id => typeof id));
     if (selectedUserIds.length === 0) {
       setError('No user selected')
+      return
+    }
+    // Validate all IDs are positive numbers
+    if (!selectedUserIds.every(id => typeof id === 'number' && !isNaN(id) && id > 0)) {
+      setError('Invalid user id format')
       return
     }
     if (!isAdmin && selectedUserIds.length > 1) {
@@ -94,19 +101,22 @@ const Add = ({ task_id, show, setShow }) => {
         </Modal.Header>
         <Modal.Body>
           {notAssignedUser.length > 0 ? (
-            <select
-              className="form-select"
-              multiple={isAdmin}
-              size="5"
-              aria-label={isAdmin ? "Multiple select" : "Single select"}
-              ref={nameRef}
-            >
-              {notAssignedUser.map((user, idx) => (
-                <option key={idx} value={user._id}>
-                  {user.name} {user.roles && user.roles.includes('Admin') && <span style={{color: 'red', fontWeight: 'bold'}}>A</span>}
-                </option>
-              ))}
-            </select>
+            <>
+              {notAssignedUser.forEach(user => console.log('Rendering user option:', user))}
+              <select
+                className="form-select"
+                multiple={isAdmin}
+                size="5"
+                aria-label={isAdmin ? "Multiple select" : "Single select"}
+                ref={nameRef}
+              >
+                {notAssignedUser.map((user, idx) => (
+                  <option key={idx} value={user.id}>
+                    {user.name} {user.roles && user.roles.includes('Admin') && <span style={{color: 'red', fontWeight: 'bold'}}>A</span>}
+                  </option>
+                ))}
+              </select>
+            </>
           ) : (
             <div>No available users to assign.</div>
           )}

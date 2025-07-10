@@ -1,5 +1,5 @@
 const notificationController = require('../controllers/notification');
-const Notification = require('../models/Notification');
+const { Notification } = require('../models/sequelize');
 let io;
 
 const initializeSocket = (socketIo) => {
@@ -14,7 +14,7 @@ const sendNotification = async (userId, notification) => {
     }
     // Persist notification to DB
     await Notification.create({
-      user: userId,
+      user_id: userId,
       message: notification.message,
       read: false
     });
@@ -48,7 +48,7 @@ const sendTaskUpdate = async (userId, update) => {
     }
     // Persist notification to DB
     await Notification.create({
-      user: userId,
+      user_id: userId,
       message: update.message,
       read: false
     });
@@ -74,7 +74,7 @@ const sendTaskComment = async (userIds, comment) => {
     // Persist notification to DB for each user
     await Promise.all(userIds.map(userId =>
       Notification.create({
-        user: userId,
+        user_id: userId,
         message: comment.message,
         read: false
       })

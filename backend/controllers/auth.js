@@ -3,13 +3,11 @@ const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const validator = require('validator')
 const url = require('../config/url')
-const User = require('../models/user/User')
+const { User } = require('../models/sequelize')
 
 const { CustomError } = require('../middleware/errorHandler')
 const { validateAuthInputField } = require('../utils/validation')
 const { generateAccessToken, generateRefreshToken } = require('../utils/generateToken')
-
-
 
 exports.login = async (req, res, next) => {
   try {
@@ -18,9 +16,13 @@ exports.login = async (req, res, next) => {
    
     const user = await User.login(email, password)
 
+    // Update last_active date
+    user.last_active = new Date();
+    await user.save();
+
     const accessToken = generateAccessToken({
       userInfo: {
-        _id: user._id, 
+        id: user.id, 
         name: user.name, 
         email, 
         roles: user.roles
@@ -28,7 +30,7 @@ exports.login = async (req, res, next) => {
     })
     
     if(persist){
-      const refreshToken = generateRefreshToken(user._id)
+      const refreshToken = generateRefreshToken(user.id)
       res.cookie('jwt', refreshToken, { httpOnly: true, sameSite: 'Lax', secure: true, maxAge: 7 * 24 * 60 * 60 * 1000 })
     }
 
@@ -46,7 +48,7 @@ exports.signup = async (req, res, next) => {
 
     validateAuthInputField({ name, email, password })
   
-    const duplicateEmail = await User.findOne({ email }).collation({ locale: 'en', strength: 2 }).lean().exec()
+    const duplicateEmail = await User.findOne({ where: { email } })
     if (duplicateEmail) throw new CustomError('Email already in use', 409)
   
     const hashedPassword = await bcrypt.hash(password, 10)
@@ -54,7 +56,7 @@ exports.signup = async (req, res, next) => {
 
     const accessToken = generateAccessToken({ 
       userInfo: {
-        _id: user._id, 
+        id: user.id, 
         name: user.name, 
         email: user.email, 
         roles: user.roles
@@ -62,7 +64,7 @@ exports.signup = async (req, res, next) => {
     })
 
     if(persist){
-      const refreshToken = generateRefreshToken(user._id)
+      const refreshToken = generateRefreshToken(user.id)
       res.cookie('jwt', refreshToken, { httpOnly: true, sameSite: 'Lax', secure: true, maxAge: 7 * 24 * 60 * 60 * 1000 })
     }
 
@@ -93,7 +95,7 @@ exports.refresh = async (req, res, next) => {
       }
     }
 
-    const user = await User.findById(decoded._id).select('_id name email roles active').lean().exec()
+    const user = await User.findByPk(decoded.id, { attributes: ['id', 'name', 'email', 'roles', 'active'] })
     if (!user) throw new CustomError('Unauthorized user not found', 401)
 
     if (!user.active) {
@@ -103,7 +105,7 @@ exports.refresh = async (req, res, next) => {
 
     const accessToken = generateAccessToken({
       userInfo: {
-        _id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
         roles: user.roles
@@ -118,8 +120,30 @@ exports.refresh = async (req, res, next) => {
 
 exports.logout = async (req, res, next) => {
   try {
+    console.log('[LOGOUT] Cookies:', req.cookies);
+    console.log('[LOGOUT] Headers:', req.headers);
     const cookies = req.cookies
     if (cookies?.jwt) {
+      // Decode the JWT to get user ID
+      let userId = null;
+      try {
+        const decoded = jwt.verify(cookies.jwt, process.env.REFRESH_TOKEN_SECRET);
+        userId = decoded.id;
+      } catch (e) {
+        // ignore
+      }
+      if (userId) {
+        const user = await User.findByPk(userId);
+        if (user) {
+          user.is_online = false;
+          await user.save();
+          console.log(`[LOGOUT] Set is_online=false for user ${user.email} (${user.id})`);
+        } else {
+          console.log(`[LOGOUT] User not found for ID ${userId}`);
+        }
+      } else {
+        console.log('[LOGOUT] No userId found in JWT');
+      }
       res.clearCookie('jwt', { httpOnly: true, sameSite: 'Lax', secure: true })
     }
     res.status(200).json({ message: 'Logged out successfully' })

@@ -1,19 +1,21 @@
 require('dotenv').config()
-console.log('DATABASE_URL loaded as:', process.env.DATABASE_URL)
+console.log('MySQL Database Configuration loaded')
 
 const express = require('express')
 const http = require('http')
 const socketIo = require('socket.io')
-const mongoose = require('mongoose')
 const helmet = require('helmet')
 const cookieParser = require('cookie-parser')
 const { logger } = require('./middleware/logger')
 const { errorHandler, notFound } = require('./middleware/errorHandler')
-const connectDB = require('./config/dbConn')
+const { connectDB } = require('./config/mysqlConn')
 const setupSocket = require('./middleware/onlineStatus')
 const requireAuth = require('./middleware/requireAuth')
 const notificationService = require('./services/notificationService')
 const notificationRoutes = require('./routes/notification')
+
+// Import Sequelize models
+require('./models/sequelize/index')
 
 const cors = require('cors');
 
@@ -22,23 +24,22 @@ app.set('trust proxy', 1) // Trust first proxy (Render, Heroku, etc.)
 const server = http.createServer(app)
 
   app.use(cors({
-    origin: 'https://task-manager-mern-sooty.vercel.app', // uncomment this for deploying it live
-    // origin: 'http://localhost:3000', // or '*' for all origins (not recommended for production)
+    // origin: 'https://task-manager-mern-sooty.vercel.app', // uncomment this for deploying it live
+    origin: 'http://localhost:3000', // or '*' for all origins (not recommended for production)
     credentials: true, // if you use cookies or authentication
   }));
 
 // ✅ Initialize socket.io properly
 const io = socketIo(server,{
   cors: {
-    origin:  'https://task-manager-mern-sooty.vercel.app', // uncomment this for deploying it live
-    methods: ['GET', 'POST'], // uncomment this for deploying it live
-    // origin: 'http://localhost:3000',
+    // origin:  'https://task-manager-mern-sooty.vercel.app', // uncomment this for deploying it live
+    // methods: ['GET', 'POST'], // uncomment this for deploying it live
+    origin: 'http://localhost:3000',
     credentials: true, // Allow cookies to be sent with requests
   },
 })
 module.exports.io = io; // <-- export io instance
 // ✅ Initialize DB
-mongoose.set('strictQuery', false)
 connectDB()
 
 // ✅ Middleware
@@ -99,9 +100,6 @@ app.use(notFound)
 app.use(errorHandler)
 
 //  Start Server
-mongoose.connection.once('open', () => {
-  console.log('Database Connected Successfully!')
-  server.listen(process.env.PORT || 4000, () => {
-    console.log(`Server running on port ${process.env.PORT || 4000}`)
-  })
+server.listen(process.env.PORT || 4000, () => {
+  console.log(`Server running on port ${process.env.PORT || 4000}`)
 })

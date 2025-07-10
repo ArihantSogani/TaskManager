@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken')
-const User = require('../models/user/User')
+const { User } = require('../models/sequelize');
 const { CustomError } = require('./errorHandler')
 
 const requireAuth = async (req, res, next) => {
@@ -27,7 +27,7 @@ const requireAuth = async (req, res, next) => {
       }
     }
 
-    const checkActive = await User.findOne({ _id: decoded.userInfo._id }).select('_id active roles').lean().exec()
+    const checkActive = await User.findOne({ where: { id: decoded.userInfo.id }, attributes: ['id', 'active', 'roles'] });
     if (!checkActive) throw new CustomError('Unauthorized user not found', 401)
 
     if(!checkActive.active){
@@ -35,11 +35,11 @@ const requireAuth = async (req, res, next) => {
       throw new CustomError('Your account has been blocked', 400)
     }
 
-    req.user = { _id: checkActive._id }
+    req.user = { id: checkActive.id }
     req.roles = checkActive.roles
     // console.log('requireAuth set req.user:', req.user, 'req.roles:', req.roles);
 
-    if (!req.user._id) throw new CustomError('Unauthorized User ID', 401)
+    if (!req.user.id) throw new CustomError('Unauthorized User ID', 401)
     if(!req.roles) throw new CustomError('Unauthorized Roles', 401)
 
     next()

@@ -21,7 +21,7 @@ const Delete = ({user}) => {
     }
 
     try {
-      const response = await axiosPrivate.delete(`/api/users/${user._id}`)
+      const response = await axiosPrivate.delete(`/api/users/${user.id}`)
       dispatch({type: 'DELETE_USER', payload: response.data})
       setError(null)
       setShow(false)

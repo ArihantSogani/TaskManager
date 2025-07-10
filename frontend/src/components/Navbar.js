@@ -62,7 +62,7 @@ const Navbars = () => {
                         <Dropdown.ItemText className="text-muted text-center">No notifications</Dropdown.ItemText>
                       )}
                       {notifications.map((n, idx) => (
-                        <Dropdown.Item key={n._id || n.id || idx} className={!n.read ? 'fw-bold' : ''}>
+                        <Dropdown.Item key={n.id || idx} className={!n.read ? 'fw-bold' : ''}>
                           <div style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}>
                             {n.message}
                           </div>

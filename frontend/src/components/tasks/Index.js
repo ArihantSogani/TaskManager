@@ -1,14 +1,10 @@
 import { BsCalendarWeek } from 'react-icons/bs'
 import { BiTimer } from 'react-icons/bi'
-// import { ROLES } from '../../config/roles'
-// import { useAuthContext } from '../../context/auth'
 import formatDistanceToNow from 'date-fns/formatDistanceToNow'
-// import { isPast} from 'date-fns'
 import Edit from './Edit'
 import { AiOutlinePaperClip } from 'react-icons/ai'
 import { useState, useEffect } from 'react'
 import { Badge, Stack, Spinner } from "react-bootstrap"
-
 import TaskComments from './TaskComments'
 import { BsThreeDotsVertical } from 'react-icons/bs'
 import { Modal, Button } from 'react-bootstrap'
@@ -16,11 +12,9 @@ import { AiOutlineInfoCircle } from 'react-icons/ai'
 import { getTaskCategory } from '../../utils/taskDateCategory'
 
 const Index = ({ tasks, allUsers }) => {
-  // const { auth } = useAuthContext()
-  // const admin = auth.roles.includes(ROLES.Admin) || auth.roles.includes(ROLES.Root)
   const [showFilesModal, setShowFilesModal] = useState(false);
   const [modalFiles, setModalFiles] = useState([]);
-  const [showActivity, setShowActivity] = useState({}); // key: task._id, value: boolean
+  const [showActivity, setShowActivity] = useState({}); // key: task.id, value: boolean
   const handleShowFilesModal = (files) => {
     setModalFiles(files);
     setShowFilesModal(true);
@@ -32,19 +26,36 @@ const Index = ({ tasks, allUsers }) => {
   // Build a global user lookup if allUsers is provided
   const globalUserMap = {};
   if (allUsers && Array.isArray(allUsers)) {
-    allUsers.forEach(u => { if (u && u._id) globalUserMap[u._id] = u; });
+    allUsers.forEach(u => { if (u && u.id) globalUserMap[u.id] = u; });
   }
+
+  console.log('[DEBUG] Global user map:', allUsers);
   return (
     <>
       {tasks.map(task => {
+        // Build users object for activity modal from allUsers and task.activity
+        // This does not change any previous functionality, only enhances username resolution in the modal
+        const users = {};
+        if (Array.isArray(task.activity) && allUsers && allUsers.length > 0) {
+          const userIds = new Set();
+          task.activity.forEach(act => {
+            if (act.user) userIds.add(Number(act.user));
+            if (act.to) userIds.add(Number(act.to));
+          });
+          allUsers.forEach(u => {
+            if (userIds.has(Number(u.id))) {
+              users[u.id] = { name: u.name };
+            }
+          });
+        }
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const dueDate = new Date(task.dueDate);
-        const dueDateOnly = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+        const due_date = new Date(task.due_date);
+        const dueDateOnly = new Date(due_date.getFullYear(), due_date.getMonth(), due_date.getDate());
         let borderColor = 'var(--gray)';
         if (task.status === 'Completed') {
           borderColor = 'var(--success)';
-        } else if (task.dueDate) {
+        } else if (task.due_date) {
           // Overdue: due date is before today
           if (dueDateOnly < today) {
             borderColor = 'var(--danger)';
@@ -64,22 +75,13 @@ const Index = ({ tasks, allUsers }) => {
             }
           }
         }
-        // Build a user lookup for activity display
-        const users = {};
-        if (task.createdBy) users[task.createdBy._id] = task.createdBy;
-        if (task.assignedTo) task.assignedTo.forEach(u => users[u._id] = u);
-        // Add users from activity log if missing
-        if (task.activity && Array.isArray(task.activity)) {
-          task.activity.forEach(act => {
-            if (act.user && !users[act.user] && globalUserMap[act.user]) users[act.user] = globalUserMap[act.user];
-            if (act.to && !users[act.to] && globalUserMap[act.to]) users[act.to] = globalUserMap[act.to];
-          });
-        }
+        // Use backend-provided users object for activity modal
+        console.log('[DEBUG] Task users:', task);
         const category = getTaskCategory(task);
         return (
           <div
             className="task-card mb-4"
-            key={task._id}
+            key={task.id}
             style={{
               boxShadow: 'var(--shadow)',
               border: `2px solid ${borderColor}`,
@@ -94,8 +96,8 @@ const Index = ({ tasks, allUsers }) => {
               <div className="d-flex align-items-center gap-3">
                 <h4 className="mb-0" style={{fontWeight: 700, fontSize: '1.15em'}}>{task.title}</h4>
                 <span className="badge rounded-pill" style={{background: task.priority === 'High' ? 'var(--danger)' : task.priority === 'Medium' ? 'var(--warning)' : '#17a2b8', color: '#fff', fontWeight: 600, fontSize: '0.85em', marginRight: 4}}>{task.priority}</span>
-                <button className="btn btn-link p-0" style={{verticalAlign: 'middle'}} onClick={() => setShowActivity(prev => ({...prev, [task._id]: true}))} title="Task Activity"><AiOutlineInfoCircle size={22}/></button>
-                <ActivityModal show={!!showActivity[task._id]} onHide={() => setShowActivity(prev => ({...prev, [task._id]: false}))} activity={task.activity || []} users={users} />
+                <button className="btn btn-link p-0" style={{verticalAlign: 'middle'}} onClick={() => setShowActivity(prev => ({...prev, [task.id]: true}))} title="Task Activity"><AiOutlineInfoCircle size={22}/></button>
+                <ActivityModal show={!!showActivity[task.id]} onHide={() => setShowActivity(prev => ({...prev, [task.id]: false}))} activity={task.activity || []} users={users} />
               </div>
               <div className="d-flex align-items-center gap-2">
                 {task.status !== 'Completed' && (
@@ -113,20 +115,20 @@ const Index = ({ tasks, allUsers }) => {
               <div className="px-4 pb-2">
                 <Stack gap={1} direction="horizontal" className="flex-wrap">
                   {task.labels.map((label, index) => (
-                    <Badge key={index} className="text-truncate" style={{background: '#6c757d', color: '#fff'}}>{label}</Badge>
+                    <Badge key={index} className="text-truncate" style={{background: '#6c757d', color: '#fff'}}>{label.name || label}</Badge>
                   ))}
                 </Stack>
               </div>
             )}
             <div className="px-4 pb-2" style={{fontSize: '1em'}}>
-              {task.createdBy && (
+              {task.creator && (
                 <span style={{fontSize: '1em', color: '#444'}}>
-                  By : <span style={{fontWeight: 700}}>{task.createdBy.name}</span>
-                  {task.assignedTo && task.assignedTo.length > 0 && (
+                  By : <span style={{fontWeight: 700}}>{task.creator.name}</span>
+                  {task.assignedUsers && task.assignedUsers.length > 0 && (
                     <>
                       <span style={{margin: '0 6px'}}>to</span>
-                      {task.assignedTo.map((user, idx) => (
-                        <span key={user._id || idx} style={{background: '#e7f1ff', color: '#1976d2', borderRadius: 12, padding: '2px 10px', fontWeight: 600, fontSize: '0.97em', marginRight: 6, display: 'inline-block'}}>{user.name}</span>
+                      {task.assignedUsers.map((user, idx) => (
+                        <span key={user.id || idx} style={{background: '#e7f1ff', color: '#1976d2', borderRadius: 12, padding: '2px 10px', fontWeight: 600, fontSize: '0.97em', marginRight: 6, display: 'inline-block'}}>{user.name}</span>
                       ))}
                     </>
                   )}
@@ -134,18 +136,20 @@ const Index = ({ tasks, allUsers }) => {
               )}
             </div>
             <div className="d-flex align-items-center flex-wrap gap-4 px-4 pb-3" style={{fontSize: '0.97em', color: '#666', borderTop: '1px solid #eee', paddingTop: 10}}>
-              {task.status === 'Completed' && task.completedAt ? (
-                <span><BsCalendarWeek className="fs-6"/> <b>Completed On:</b> {new Date(task.completedAt).toLocaleDateString('en-GB')}</span>
-              ) : task.dueDate && (
+              {task.status === 'Completed' && task.completed_at && !isNaN(new Date(task.completed_at)) ? (
+                <span><BsCalendarWeek className="fs-6"/> <b>Completed On:</b> {new Date(task.completed_at).toLocaleDateString('en-GB')}</span>
+              ) : task.due_date && !isNaN(new Date(task.due_date)) ? (
                 <span>
-                  <BsCalendarWeek className="fs-6"/> <b>Due:</b> {new Date(task.dueDate).toLocaleDateString('en-GB')}
+                  <BsCalendarWeek className="fs-6"/> <b>Due:</b> {new Date(task.due_date).toLocaleDateString('en-GB')}
                   {category === 'overdue' && <span style={{color:'var(--danger)', fontWeight:600}}>(Overdue!)</span>}
                   {category === 'urgent' && <span style={{color:'var(--warning)', fontWeight:600}}>(Due Today)</span>}
                   {category === 'upcoming' && <span style={{color:'var(--info)', fontWeight:600}}>(This Week)</span>}
                   {category === 'future' && <span style={{color:'var(--secondary)', fontWeight:600}}>(Future)</span>}
                 </span>
+              ) : (
+                <span><BsCalendarWeek className="fs-6"/> <b>Due:</b> N/A</span>
               )}
-              <span><BiTimer className="fs-5"/> <b>Last updated:</b> {formatDistanceToNow(new Date(task.updatedAt), { addSuffix: true })}</span>
+              <span><BiTimer className="fs-5"/> <b>Last updated:</b> {task.updated_at && !isNaN(new Date(task.updated_at)) ? formatDistanceToNow(new Date(task.updated_at), { addSuffix: true }) : 'N/A'}</span>
                     {task.attachments && task.attachments.length > 0 && (
                 <span><AiOutlinePaperClip />{' '}
                         {task.attachments.length === 1 ? (
@@ -166,7 +170,7 @@ const Index = ({ tasks, allUsers }) => {
                         )}
                 </span>
               )}
-              <span><BsCalendarWeek className="fs-6"/> <b>Created:</b> {new Date(task.createdAt).toLocaleDateString('en-GB')}</span>
+              <span><BsCalendarWeek className="fs-6"/> <b>Created:</b> {task.created_at && !isNaN(new Date(task.created_at)) ? new Date(task.created_at).toLocaleDateString('en-GB') : 'N/A'}</span>
             </div>
             <div className="card-footer bg-white px-4 pt-2 pb-3 border-0 d-flex align-items-center gap-3">
               {/* ASSIGN button removed for all users */}
@@ -205,12 +209,13 @@ const Index = ({ tasks, allUsers }) => {
 // Three dots/settings button for opening Edit modal
 function EditButton({ task }) {
   const [show, setShow] = useState(false);
+  console.log('[EDITBUTTON TRACE 1] Rendered for task:', task.id);
   return (
     <>
-      <button className="btn btn-link p-0" style={{verticalAlign: 'middle'}} onClick={() => setShow(true)} title="Task Settings">
+      <button className="btn btn-link p-0" style={{verticalAlign: 'middle'}} onClick={() => {console.log('[EDITBUTTON TRACE 2] Button clicked for task:', task.id); setShow(true);}} title="Task Settings">
         <BsThreeDotsVertical size={22}/>
       </button>
-      {show && <EditModal task={task} show={show} setShow={setShow} />}
+      {show && (console.log('[EDITBUTTON TRACE 3] Showing EditModal for task:', task.id), <EditModal task={task} show={show} setShow={setShow} />)}
     </>
   );
 }
@@ -221,6 +226,7 @@ function EditModal({ task, show, setShow }) {
 }
 
 function ActivityModal({ show, onHide, activity, users }) {
+  console.log('users object:', users);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     if (show) {
@@ -232,6 +238,20 @@ function ActivityModal({ show, onHide, activity, users }) {
       setLoading(false);
     }
   }, [show, activity]);
+
+  // Debug logs
+  useEffect(() => {
+    if (show) {
+      console.log('[DEBUG] ActivityModal users object:', users);
+      if (Array.isArray(activity)) {
+        activity.forEach((act, idx) => {
+          const userName = users?.[act.user]?.name;
+          console.log(`[DEBUG] Activity entry #${idx}:`, act, 'Resolved user name:', userName);
+        });
+      }
+    }
+  }, [show, users, activity]);
+
   return (
     <Modal show={show} onHide={onHide} centered>
       <Modal.Header closeButton>
@@ -245,28 +265,52 @@ function ActivityModal({ show, onHide, activity, users }) {
         ) : (
           activity && activity.length > 0 ? (
             <ul className="list-unstyled">
-              {activity.slice().sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).map((act, idx) => (
-                <li key={idx} style={{ marginBottom: 16 }}>
-                  <div>
-                    <b>{act.type === 'assigned' ? 'Assigned' : 'Changes Made'}</b> &mdash; {new Date(act.timestamp).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
-                  </div>
-                  <div style={{ fontSize: '0.97em', color: '#444' }}>
-                    {act.type === 'assigned' && (
-                      <>
-                        <span>By: <b>{act.user?.name || users[act.user]?.name || act.user || 'Unknown'}</b></span>
-                        {act.to && <span> &rarr; <b>{act.to?.name || users[act.to]?.name || act.to || 'Unknown'}</b></span>}
-                      </>
-                    )}
-                    {act.type === 'status' && (
-                      <>
-                        <span>By: <b>{act.user?.name || users[act.user]?.name || act.user || 'Unknown'}</b></span>
-                        <span> &mdash; Status: <b>{act.status}</b></span>
-                      </>
-                    )}
-                    {act.details && <div style={{ fontSize: '0.93em', color: '#888' }}>{act.details}</div>}
-                  </div>
-                </li>
-              ))}
+              {activity.slice().sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).map((act, idx) => {
+                // Debug log for each activity entry and resolved user(s)
+                console.log('[ACTIVITY ENTRY DEBUG]', {
+                  idx,
+                  act,
+                  userObj: users[act.user],
+                  toUserObj: act.to ? users[act.to] : undefined,
+                  usersObj: users
+                });
+                return (
+                  <li key={idx} style={{ marginBottom: 16 }}>
+                    <div>
+                      <b>{act.type === 'assigned' ? 'Assigned' : 'Changes Made'}</b> &mdash; {new Date(act.timestamp).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
+                    </div>
+                    <div style={{ fontSize: '0.97em', color: '#444' }}>
+                      {act.type === 'assigned' && (
+                        <>
+                          <span>By: <b>{users[act.user]?.name || 'Unknown'}</b></span>
+                          {act.to && <span> &rarr; <b>{users[act.to]?.name || 'Unknown'}</b></span>}
+                        </>
+                      )}
+                      {act.type === 'status' && (
+                        <>
+                          <span>By: <b>{users[act.user]?.name || 'Unknown'}</b></span>
+                          <span> &mdash; Status: <b>{act.status}</b></span>
+                        </>
+                      )}
+                      {act.type === 'edit' && (
+                        <>
+                          <span>By: <b>{users[act.user]?.name || 'Unknown'}</b></span>
+                          <span> &mdash; Field: <b>{act.field}</b></span>
+                        </>
+                      )}
+                      {/* Show username instead of user ID in details for assigned */}
+                      {act.type === 'assigned' && act.to && (
+                        <div style={{ fontSize: '0.93em', color: '#888' }}>
+                          Assigned to <b>{users[act.to]?.name || `user ID ${act.to}`}</b>
+                        </div>
+                      )}
+                      {act.type !== 'assigned' && act.details && (
+                        <div style={{ fontSize: '0.93em', color: '#888' }}>{act.details}</div>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           ) : (
             <div className="text-muted">No activity yet.</div>

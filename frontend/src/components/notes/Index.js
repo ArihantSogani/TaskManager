@@ -8,7 +8,7 @@ const Index = ({ filteredNote }) => {
     <>
       {filteredNote.map((note, index) => (
         <div className="col-lg-3" key={index}>
-          <Link to={`/note/view/${note._id}`} className="text-decoration-none text-muted">
+          <Link to={`/note/view/${note.id}`} className="text-decoration-none text-muted">
             <div className="card my-2">
               <div className="card-body">
                 <h5 className="card-title">{note.title}</h5>
