@@ -61,6 +61,15 @@ exports.update = async (req, res, next) => {
             updateFields.email = email;
         }
         if(password){
+            // Require currentPassword for password change
+            if (!req.body.currentPassword) {
+                throw new CustomError('Current password is required to change password', 400);
+            }
+            // Check current password
+            const isMatch = await bcrypt.compare(req.body.currentPassword, checkUser.password_hashed);
+            if (!isMatch) {
+                throw new CustomError('Current password does not match', 400);
+            }
             validateAuthInputField({ password });
             updateFields.password_hashed = await bcrypt.hash(password, 10);
             updateFields.password_error_count = 0;
@@ -79,7 +88,11 @@ exports.update = async (req, res, next) => {
         }
         const verifyRole = await User.findByPk(id);
         if(verifyRole.roles.includes(ROLES_LIST.Root)) throw new CustomError('Not authorized to edit root user', 401);
-        if(req.roles.includes(ROLES_LIST.Admin) && verifyRole.roles.includes(ROLES_LIST.Admin)) throw new CustomError('Not authorized to edit this admin', 401);
+        if(
+          req.roles.includes(ROLES_LIST.Admin) &&
+          verifyRole.roles.includes(ROLES_LIST.Admin) &&
+          req.user.id.toString() !== id.toString() // allow self-edit
+        ) throw new CustomError('Not authorized to edit this admin', 401);
         await User.update(updateFields, { where: { id } });
         const query = req.roles.includes(ROLES_LIST.Root) ? {} : { [Op.or]: [{ roles: ROLES_LIST.User }, { id: req.user.id }], roles: { [Op.not]: ROLES_LIST.Root } };
         const users = await User.findAll({
@@ -104,6 +117,17 @@ exports.delete = async (req, res, next) => {
         if (!user) throw new CustomError('User not found', 404);
         await user.destroy();
         res.status(200).json(user);
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.getMinimalList = async (req, res, next) => {
+    try {
+        const users = await User.findAll({
+            attributes: ['id', 'name']
+        });
+        res.status(200).json(users);
     } catch (error) {
         next(error);
     }

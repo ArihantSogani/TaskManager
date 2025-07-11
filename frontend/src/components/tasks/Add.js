@@ -238,7 +238,7 @@ const Add = () => {
                   <Form.Label>Assign to Team Members:</Form.Label>
                   <Select
                     isMulti
-                    options={users.map(user => ({ value: user.id, label: user.name }))}
+                    options={users.filter(user => user.active).map(user => ({ value: user.id, label: user.name }))}
                     value={users.filter(user => selectedUsers.includes(user.id)).map(user => ({ value: user.id, label: user.name }))}
                     onChange={selected => setSelectedUsers(selected ? selected.map(opt => opt.value) : [])}
                     placeholder="Select team members..."

@@ -50,7 +50,7 @@ const Signup = () => {
           <button className="btn mb-2" onClick={handleShowPassword}>{changeIcon ? <FaEyeSlash/> : <FaEye/>}</button>
         </div>
         <div style={{ fontSize: '0.9em', color: '#6c757d', marginBottom: '8px' }}>
-          Password must be at least 8 characters and include at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 symbol.
+          Password must have at least 8 characters, at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 special character
         </div>
 
         <button className="w-100 mt-3" disabled={isLoading}>Sign Up</button>

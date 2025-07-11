@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Alert, Button, Form, Modal } from 'react-bootstrap'
+import { Alert, Button, Form, Modal, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { usePathContext } from '../../context/path'
 import { useUserContext } from '../../context/user'
 import { useAuthContext } from '../../context/auth'
@@ -41,6 +41,11 @@ const Add = ({ show: showProp, setShow: setShowProp }) => {
       return
     }
 
+    if (!activeRef.current.checked) {
+      setError('Active status is required and must be turned on')
+      return
+    }
+
     const addUser = { name: nameRef.current.value, email: emailRef.current.value, password: passwordRef.current.value, roles: [rolesRef.current.value], active: activeRef.current.checked}
    
     try {
@@ -49,6 +54,7 @@ const Add = ({ show: showProp, setShow: setShowProp }) => {
         dispatch({type: 'CREATE_USER', payload: response.data})
         setError(null)
         setShow(false)
+        navigate('/user')
       } catch (dispatchErr) {
         setError('User created, but UI update failed. Please refresh.')
       }
@@ -84,7 +90,16 @@ const Add = ({ show: showProp, setShow: setShowProp }) => {
           <Form.Group className="mb-3">
             <Form.Label>Password: </Form.Label>
             <div className="d-flex">
-              <Form.Control type="password" ref={passwordRef} autoComplete="on" placeholder="Enter password" defaultValue="" />
+              <OverlayTrigger
+                placement="right"
+                overlay={
+                  <Tooltip id="password-tooltip">
+                    Password must have at least 8 characters, at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 special character
+                  </Tooltip>
+                }
+              >
+                <Form.Control type="password" ref={passwordRef} autoComplete="on" placeholder="Enter password" defaultValue="" />
+              </OverlayTrigger>
               <Button variant="default" className="mb-2" onClick={handleShowPassword}>{changeIcon ? <FaEyeSlash/> : <FaEye/>}</Button>
             </div>
           </Form.Group>

@@ -2,10 +2,11 @@ import { useLogout } from '../hooks/useLogout'
 import { usePathContext } from '../context/path'
 import { useAuthContext } from '../context/auth'
 import { Nav, Navbar, Button, Dropdown, Badge } from "react-bootstrap"
-import { FaHome, FaBell } from "react-icons/fa"
+import { FaHome, FaBell, FaCog } from "react-icons/fa"
 import { Link } from "react-router-dom"
 import { useNotificationContext } from '../context/notification'
 import { useState, useEffect } from 'react'
+import AccountSettingsModal from './AccountSettingsModal'
 
 
 const Navbars = () => {
@@ -14,6 +15,7 @@ const Navbars = () => {
   const { title, setTitle } = usePathContext()
   const { notifications, unreadCount, markAllAsRead, loading } = useNotificationContext()
   const [showDropdown, setShowDropdown] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
 
 
   useEffect(() => {
@@ -72,6 +74,9 @@ const Navbars = () => {
                       ))}
                     </Dropdown.Menu>
                   </Dropdown>
+                  {/* Settings Button */}
+                  <Button variant="outline-info" className="mx-2" onClick={() => setShowSettings(true)}><FaCog className="fs-5" /></Button>
+                  <AccountSettingsModal show={showSettings} onHide={() => setShowSettings(false)} />
                   <Button variant="outline-warning" className="mx-3" onClick={() => logout()}>Log Out</Button>
                 </>
               )}

@@ -117,7 +117,12 @@ task.assignedUsers.some(user => user?.name?.toLowerCase().includes(term))
   useEffect(() => {
     async function fetchAllUsers() {
       try {
-        const response = await axiosPrivate.get('/api/users');
+        let response;
+        if (admin) {
+          response = await axiosPrivate.get('/api/users');
+        } else {
+          response = await axiosPrivate.get('/api/users/minimal');
+        }
         setAllUsers(response.data);
         // Debug log: show all user IDs and names
         console.log('[DEBUG] All users:', response.data.map(u => ({ id: u.id, name: u.name })));
@@ -126,7 +131,7 @@ task.assignedUsers.some(user => user?.name?.toLowerCase().includes(term))
       }
     }
     fetchAllUsers();
-  }, [axiosPrivate]);
+  }, [axiosPrivate, admin]);
 
   return (
     <>
