@@ -35,7 +35,7 @@ const Login = () => {
               placement="right"
               overlay={
                 <Tooltip id="password-tooltip">
-                  Password must have at least 8 characters, at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 special character
+                  PASSWORD must have at least 8 characters, at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 special character
                 </Tooltip>
               }
             >
