@@ -49,6 +49,18 @@ exports.update = async (req, res, next) => {
         validateObjectId(id, 'User');
         const checkUser = await User.findByPk(id);
         if (!checkUser) throw new CustomError('User not found', 400);
+        // Only allow users to update their own profile/password, but only admins/root can update others or change roles/active
+        const isSelf = req.user.id.toString() === id.toString();
+        const isAdmin = req.roles.includes(ROLES_LIST.Admin);
+        const isRoot = req.roles.includes(ROLES_LIST.Root);
+        // Prevent non-admin/root from editing other users
+        if (!isSelf && !isAdmin && !isRoot) {
+            throw new CustomError('Not authorized to edit other users', 401);
+        }
+        // Prevent non-admin/root from changing roles or active
+        if ((roles || typeof active === 'boolean') && !isAdmin && !isRoot) {
+            throw new CustomError('Not authorized to change roles or active status', 401);
+        }
         const updateFields = {};
         if(name) { 
             validateAuthInputField({ name });
@@ -74,11 +86,11 @@ exports.update = async (req, res, next) => {
             updateFields.password_hashed = await bcrypt.hash(password, 10);
             updateFields.password_error_count = 0;
         }
-        if(roles){
+        if(roles && (isAdmin || isRoot)){
             if (!Array.isArray(roles) || !roles.length) throw new CustomError('Invalid roles data type received', 400);
             updateFields.roles = roles;
         }
-        if (typeof active === 'boolean') {
+        if (typeof active === 'boolean' && (isAdmin || isRoot)) {
             updateFields.active = active;
             if (active) {
                 updateFields.password_error_count = 0;
@@ -89,12 +101,17 @@ exports.update = async (req, res, next) => {
         const verifyRole = await User.findByPk(id);
         if(verifyRole.roles.includes(ROLES_LIST.Root)) throw new CustomError('Not authorized to edit root user', 401);
         if(
-          req.roles.includes(ROLES_LIST.Admin) &&
+          isAdmin &&
           verifyRole.roles.includes(ROLES_LIST.Admin) &&
           req.user.id.toString() !== id.toString() // allow self-edit
         ) throw new CustomError('Not authorized to edit this admin', 401);
         await User.update(updateFields, { where: { id } });
-        const query = req.roles.includes(ROLES_LIST.Root) ? {} : { [Op.or]: [{ roles: ROLES_LIST.User }, { id: req.user.id }], roles: { [Op.not]: ROLES_LIST.Root } };
+        // Only return the updated user for self-update, else return all users for admin/root
+        if (isSelf && !isAdmin && !isRoot) {
+            const updatedUser = await User.findByPk(id, { attributes: { exclude: ['password_hashed', 'password_error_count', 'password_error_date'] } });
+            return res.status(200).json([updatedUser]);
+        }
+        const query = isRoot ? {} : { [Op.or]: [{ roles: ROLES_LIST.User }, { id: req.user.id }], roles: { [Op.not]: ROLES_LIST.Root } };
         const users = await User.findAll({
             where: query,
             order: [['is_online', 'DESC'], ['last_active', 'DESC']],

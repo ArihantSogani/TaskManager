@@ -27,7 +27,7 @@ const Index = ({ filteredNames }) => {
       await axiosPrivate.patch('/api/users', { id: user.id, active: !user.active })
       window.location.reload();
     } catch (error) {
-      alert('Failed to update user status')
+      alert('Admin Cannot change the active status of other Admin users')
     }
   }
 

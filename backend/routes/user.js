@@ -8,14 +8,14 @@ const ROLES_LIST = require('../config/rolesList')
 router.get('/minimal', requireAuth, usersController.getMinimalList)
 
 router.use(requireAuth)
-router.use(requireRoles([ROLES_LIST.Root, ROLES_LIST.Admin]))
 
+// Only protect GET, POST, DELETE with requireRoles
 router.route('/')
-    .get(usersController.getAll)
-    .post(usersController.create)
+    .get(requireRoles([ROLES_LIST.Root, ROLES_LIST.Admin]), usersController.getAll)
+    .post(requireRoles([ROLES_LIST.Root, ROLES_LIST.Admin]), usersController.create)
     .patch(usersController.update)
 
 router.route('/:id')
-    .delete(usersController.delete)
+    .delete(requireRoles([ROLES_LIST.Root, ROLES_LIST.Admin]), usersController.delete)
 
 module.exports = router
