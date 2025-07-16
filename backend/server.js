@@ -24,8 +24,8 @@ app.set('trust proxy', 1) // Trust first proxy (Render, Heroku, etc.)
 const server = http.createServer(app)
 
   app.use(cors({
-    // origin: 'https://task-manager-mern-sooty.vercel.app',
-    origin: 'https://task-manager-mern-fpculo1to-arihant-soganis-projects.vercel.app/', // uncomment this for deploying it live
+    origin: 'https://task-manager-mern-sooty.vercel.app',
+    // origin: 'https://task-manager-mern-fpculo1to-arihant-soganis-projects.vercel.app/', // uncomment this for deploying it live
     // origin: 'http://localhost:3000', // or '*' for all origins (not recommended for production)
     credentials: true, // if you use cookies or authentication
   }));
@@ -33,8 +33,8 @@ const server = http.createServer(app)
 // ✅ Initialize socket.io properly
 const io = socketIo(server,{
   cors: {
-    // origin:  'https://task-manager-mern-sooty.vercel.app',
-    origin: 'https://task-manager-mern-fpculo1to-arihant-soganis-projects.vercel.app/', // uncomment this for deploying it live
+    origin:  'https://task-manager-mern-sooty.vercel.app',
+    // origin: 'https://task-manager-mern-fpculo1to-arihant-soganis-projects.vercel.app/', // uncomment this for deploying it live
     methods: ['GET', 'POST'], // uncomment this for deploying it live
     // origin: 'http://localhost:3000',
     credentials: true, // Allow cookies to be sent with requests
