@@ -1,6 +1,5 @@
 require('dotenv').config()
 console.log('MySQL Database Configuration loaded')
-
 const express = require('express')
 const http = require('http')
 const socketIo = require('socket.io')
@@ -24,19 +23,24 @@ app.set('trust proxy', 1) // Trust first proxy (Render, Heroku, etc.)
 const server = http.createServer(app)
 
   app.use(cors({
-    origin: 'https://task-manager-mern-sooty.vercel.app',
+    // origin: 'https://task-manager-mern-sooty.vercel.app',
     // origin: 'https://task-manager-mern-fpculo1to-arihant-soganis-projects.vercel.app/', // uncomment this for deploying it live
-    // origin: 'http://localhost:3000', // or '*' for all origins (not recommended for production)
+    // origin: 'https://60649481650f.ngrok-free.app',
+    origin: process.env.CLIENT_URL,
+    // origin: '*', or '*' for all origins (not recommended for production)
     credentials: true, // if you use cookies or authentication
   }));
 
 // ✅ Initialize socket.io properly
 const io = socketIo(server,{
   cors: {
-    origin:  'https://task-manager-mern-sooty.vercel.app',
+    // origin:  'https://task-manager-mern-sooty.vercel.app',
     // origin: 'https://task-manager-mern-fpculo1to-arihant-soganis-projects.vercel.app/', // uncomment this for deploying it live
-    methods: ['GET', 'POST'], // uncomment this for deploying it live
-    // origin: 'http://localhost:3000',
+      // uncomment this for deploying it live
+    // origin: 'https://60649481650f.ngrok-free.app',
+    // origin: '*', Allow all origins for local development
+    origin: process.env.CLIENT_URL,
+    methods: ['GET', 'POST'],
     credentials: true, // Allow cookies to be sent with requests
   },
 })
@@ -73,7 +77,7 @@ io.on('connection', (socket) => {
 
   if (userId) {
     socket.join(userId.toString())
-    console.log(`User ${userId} joined room ${userId}`)
+    console.log(`User ${userId} joined room ${userId}`) 
   } else {
     console.log('No userId provided in socket handshake!')
   }
